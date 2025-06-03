@@ -30,14 +30,14 @@ Efficient Private Delegation of zkSNARK Provers
   class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
   style="font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;"
 >
-  Reference: A. Chiesa et al., "Eos: Efficient Private Delegation of zkSNARK Provers", <i>USENIX Security</i>, 2023.
+  Reference: [1] A. Chiesa et al., "Eos: Efficient Private Delegation of zkSNARK Provers", <i>USENIX Security</i>, 2023.
 </div>
 
 ---
 section: introduction
 ---
 
-<div class="text-2xl" style="transform: scale(0.9); transform-origin: top left; display: inline-block;">
+<div class="text-xl" style="transform: scale(0.9); transform-origin: top left; display: inline-block;">
 
 # 🔍 Comparison: EOS in zkSNARK Research vs EOS.IO Blockchain Platform
 
@@ -55,24 +55,66 @@ section: introduction
 > ⚠️ Note: These two EOS projects are completely unrelated. The zkSNARK EOS is a cryptography research system; the blockchain EOS is an enterprise-grade DApp platform.
 > </span>
 
+</div>
 
+<div
+  class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
+  style="font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;"
+>
+  Reference: [1] https://www.usenix.org/conference/usenixsecurity23/presentation/chiesa<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ensp;
+  [2] https://github.com/EOSIO/eos
 </div>
 
 ---
 
-# Introduction & Motivation
+# **some error last time **
 
-* **What are zkSNARKs?**
-    * Succinct Zero-Knowledge Proofs: Prove knowledge of a secret witness `w` for a statement `$F(x,w)=1$` without revealing `w`.
-    * Properties: Succinctness (small proof, fast verification) & Zero-Knowledge (preserves privacy of `w`).
-    * Growing academic and industrial interest.
-* **The Problem:**
-    * Generating zkSNARKs is computationally expensive (time and memory).
-    * This limits their use in resource-constrained environments (e.g., mobile devices) and for complex computations.
-* **Existing Approaches & Their Limitations:**
-    * **Local Proving:** Too slow or resource-intensive for many users/applications.
-    * **Cloud Delegation (e.g., DIZK):** Powerful servers can generate proofs faster, BUT this sacrifices privacy by revealing the secret witness `w` to the cloud. Problematic for privacy-focused applications like private currencies or decentralized computation.
-* **The Central Question:** Can users privately and efficiently outsource zkSNARK proving to untrusted machines?
+ * 上次讲错的：zkSNARK证明的是一个私有的witness（etc.a pw or a sk）满足一个公开的circuit（etc.运行了一个智能合约的某段逻辑，且得到了正确结果），而非直接证明一个多项式
+
+---
+
+# **What are zkSNARKs?**
+    
+  * Succinct Zero-Knowledge Proofs: Prove knowledge of a secret witness $w$ for a statement $F(x,w)=1$ without revealing $w$.
+   
+  * Properties: Succinctness (small proof, fast verification) & Zero-Knowledge (preserves privacy of $w$).
+
+| 特性                        | 意义                                       |
+| ------------------------- | ---------------------------------------- |
+| **Zero-Knowledge**        | 证明不泄露任何除“语句为真”之外的信息。                     |
+| **Succinct**              | 证明非常简洁，验证非常快（与计算规模无关）。                   |
+| **Non-interactive**       | 不需要多轮互动，单次传输即可。                          |
+| **Argument of Knowledge** | 保证 prover 确实“知道”某个见证（witness），而不是伪造一个证明。 |
+
+<img src="https://img.learnblockchain.cn/attachments/2021/11/012YI74G6195bf48ea678.jpg" alt="Logo" width="520" style="position: absolute; bottom: 50px; right: 50px; z-index: 10;" />
+
+<div
+  class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
+  style="font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;"
+>
+  Reference: [1] https://zhuanlan.zhihu.com/p/38205067<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ensp;
+  [2] https://learnblockchain.cn/article/3220<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ensp;
+  [3] https://github.com/slowmist/zkSnark-Groth16-Getting-Started
+</div>
+
+---
+
+# 喵喵喵
+
+**The Problem:**
+
+  * Generating zkSNARKs is computationally expensive (time and memory).
+  * This limits their use in resource-constrained environments (e.g., mobile devices) and for complex computations.
+
+**Existing Approaches & Their Limitations:**
+
+  * **Local Proving:** Too slow or resource-intensive for many users/applications.
+  * **Cloud Delegation (e.g., DIZK):** Powerful servers can generate proofs faster, BUT this sacrifices privacy by revealing the secret witness $w$ to the cloud. Problematic for privacy-focused applications like private currencies or decentralized computation.
+
+**The Central Question:** Can users privately and efficiently outsource zkSNARK proving to untrusted machines?
 
 ---
 
@@ -173,7 +215,7 @@ A **Polynomial Commitment (PC) scheme** is a cryptographic primitive that enable
 By combining these primitives in a novel way, particularly by specializing the MPC protocol for the delegation setting and designing efficient circuits, Eos achieves its significant performance and privacy benefits.
 
 ---
-section: Construct the EOS
+section: Construction
 ---
 
 # Eos System Overview
@@ -235,7 +277,7 @@ section: Construct the EOS
     * Eos Insight: Many operations (like Multi-Scalar Multiplication - MSM) are linear if scalars are private but bases are public (Claim 4.7 for MSM). $C_{KZG}.Commit$ has depth 0 (Claim 4.8). $C_{KZG}.Open$ also has depth 0 (Claim 4.9).
 
 ---
-section: examination
+section: Evaluation
 ---
 
 # Implementation & Key Optimizations (Section 7)
