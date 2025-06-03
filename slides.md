@@ -11,7 +11,7 @@ fonts:
   provider: none
 ---
 
-# EOS <br> <span style="font-size: 0.7em;">Efficient Outsourcing of SNARKs</span>
+# **EOS** <br> <span style="font-size: 0.7em;">Efficient Outsourcing of SNARKs</span>
 
 <p style="font-size: 2rem; color: black;">
 Efficient Private Delegation of zkSNARK Provers
@@ -63,25 +63,23 @@ zkSNARKs：Z(zero)k(knowledge)S(succinct)N(non-interactive)AR(argument)K(knowled
 </div>
 
 ---
-
-# **zkSNARKs**
-
----
 layout: default
 ---
 
-# 如果没有zkSNARK
+# **为什么要有zkSNARK**
 
 <div class="grid grid-cols-3 gap-4">
   <div class="pr-4" style="border-right: 1px dashed #718096;">
 
   ## 传统交互式方案
 
-  如果没有zkSNARK，使用传统ZKP
+  如果没有 $\text{zkSNARK}$，使用传统 ZKP
 
-  证明者 $\mathcal{P}$ 知道 $x$，使得 $y = g^x \mod p$
+  证明者 $\mathcal{P}$ 知道 $x$ 满足 $y = g^x \mod p$
 
-  $\mathcal{P}$ 选择随机 $r$，计算 $t = g^r \mod p$。
+  ---
+
+  $\mathcal{P}$ 选择随机 $r$，计算 $t = g^r \mod p$；
 
   $\mathcal{P}$ 发送 $t$ 给验证者。
 
@@ -91,6 +89,8 @@ layout: default
 
   $\mathcal{V}$ 检查：$g^s \stackrel{?}{=} t·y^c \mod p$
 
+  ---
+
   上述内容即为 **Schnorr协议** 过程
 
   </div>
@@ -98,31 +98,34 @@ layout: default
 
   ## 我想要非交互式滴
 
-  将验证者 $\mathcal{V}$ 的随机挑战 $c$ 改为一个哈希值：$c=H(g,y,t)$
+  将 $\mathcal{V}$ 的随机挑战 $c$ 改为一个固定哈希
 
-  $\mathcal{P}$ 选择随机 $r$，计算 $t = g^r \mod p$。
+  ---
+  
+  $\mathcal{P}$ 
+  <br> 选择随机 $r$，计算 $t = g^r \mod p$；
+  <br> 计算挑战：$c=H(g||y||t)$；
+  <br> 计算响应：$s = r + c·x \mod q$；
+  <br> 输出证明：$π = (t, s)$。
+  <br> $\mathcal{V}$ 
+  <br> 重新计算挑战：$c=H(g||y||t)$；
+  <br> 检查是否：$g^s \stackrel{?}{=} t·y^c \mod p$。
 
-  $\mathcal{P}$ 计算挑战：$c=H(g,y,t)$
-
-  $\mathcal{P}$ 计算响应：$s = r + c·x \mod q$
-
-  $\mathcal{P}$ 输出证明：$π = (t, s)$
-
-  $\mathcal{V}$ 重新计算挑战：$c$，检查：<br> $g^s \stackrel{?}{=} t·y^c \mod p$
-
+  ---
 
   新增的这一步被称为 **Fiat–Shamir 变换**
 
   上述内容即为**非交互式 Schnorr 零知识证明（NIZK proof）** 过程
+
   </div>
 
   <div class="pl-4">
 
   ## 但是哈希函数怎么证明
 
-  哈希函数不具备任何同态性，无法进行代数操作，故而很难使用sigma协议进行验证
+  Schnorr 协议仅用于离散对数形式，而对其他函数（多项式或哈希函数等）无能为力
 
-  这时就要搬出我们的zkSNARK了~
+  这时就要搬出我们的 $\text{zkSNARK}$ 了~
   
   证明者 $\mathcal{P}$ 知道 $x$，使得 $H(x) = y$
 
@@ -130,17 +133,58 @@ layout: default
 
    - 把 $H(x) = y$ 转换为一个 算术电路；
 
-   - 编译这个电路为一组约束（如 R1CS）；
+   - 编译该电路为一组约束（如 $\text{R1CS}$）；
 
-   - 让证明者用 $x$ 生成一个 zk 证明 $π$，表明"存在一个 $x$ 使得约束成立"；
+   - 让证明者用 $x$ 生成一个零知识证明 $π$，表明 “存在一个 $x$ 使得约束成立 ”；
 
    - 验证者使用公开的 $y$ 和 $π$ 来验证，而无需知道 $x$。
 
   </div>
 </div>
 
+---
+
+# **zkSNARK如何实现**
+
+zkSNARK的关键组件
+
+R1CS
+
+QAP
 
 
+
+<img src="https://img.learnblockchain.cn/attachments/2021/11/012YI74G6195bf48ea678.jpg" alt="Logo" width="520" style="position: absolute; bottom: 50px; right: 50px; z-index: 10;" />
+
+<div
+  class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
+  style="font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;"
+>
+  Reference: [1] https://zhuanlan.zhihu.com/p/38205067<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ensp;
+  [2] https://learnblockchain.cn/article/3220<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ensp;
+  [3] https://github.com/slowmist/zkSnark-Groth16-Getting-Started
+</div>
+
+---
+
+# R1CS
+
+R1CS：Rank-1 Constraint System，秩1约束系统
+
+用数学等式来描述 **一个程序在输入某些值时该如何运作**
+
+秩1：矩阵只有一个现行独立的行/列
+
+R1CS表达每个约束为一个三元乘法等式
+
+$\langle\vec{a},\vec{w}\rangle\cdot\langle\vec{b},\vec{w}\rangle=\langle\vec{c},\vec{w}\rangle$
+
+其中：
+ - $\vec{a},\vec{b},\vec{c}$ 是**系数向量**
+ - $\vec{w}$ 是**变量向量**，包括输入输出和中间变量
+ - $\langle\cdot,\cdot\rangle$ 是**向量内积**
 
 ---
 
@@ -226,21 +270,6 @@ section: introduction
 | **Succinct**              | The proof is **very short** and can **be verified quickly**, regardless of the size of the computation. |
 | **Non-interactive**       | No need for multiple rounds of communication; **a single message** is sufficient.               |
 | **Argument of Knowledge** | Ensures that the prover actually "knows" a valid witness, rather than **faking the proof**.     |
-
----
-
-<img src="https://img.learnblockchain.cn/attachments/2021/11/012YI74G6195bf48ea678.jpg" alt="Logo" width="520" style="position: absolute; bottom: 50px; right: 50px; z-index: 10;" />
-
-<div
-  class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
-  style="font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;"
->
-  Reference: [1] https://zhuanlan.zhihu.com/p/38205067<br>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ensp;
-  [2] https://learnblockchain.cn/article/3220<br>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ensp;
-  [3] https://github.com/slowmist/zkSnark-Groth16-Getting-Started
-</div>
 
 ---
 
