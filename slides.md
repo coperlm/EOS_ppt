@@ -68,24 +68,24 @@ section: introduction
 
 ---
 
-# **some error last time **
+# **Some error last meeting**
 
  * 上次讲错的：zkSNARK证明的是一个私有的witness（etc.a pw or a sk）满足一个公开的circuit（etc.运行了一个智能合约的某段逻辑，且得到了正确结果），而非直接证明一个多项式
 
 ---
 
 # **What are zkSNARKs?**
-    
-  * Succinct Zero-Knowledge Proofs: Prove knowledge of a secret witness $w$ for a statement $F(x,w)=1$ without revealing $w$.
-   
-  * Properties: Succinctness (small proof, fast verification) & Zero-Knowledge (preserves privacy of $w$).
 
-| 特性                        | 意义                                       |
-| ------------------------- | ---------------------------------------- |
-| **Zero-Knowledge**        | 证明不泄露任何除“语句为真”之外的信息。                     |
-| **Succinct**              | 证明非常简洁，验证非常快（与计算规模无关）。                   |
-| **Non-interactive**       | 不需要多轮互动，单次传输即可。                          |
-| **Argument of Knowledge** | 保证 prover 确实“知道”某个见证（witness），而不是伪造一个证明。 |
+  * Prove knowledge of a secret witness $w$ for a statement $F(x,w)=1$ without revealing $w$.
+
+| **Property**              | **Meaning**                                                                                     |
+| ------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Zero-Knowledge**        | The proof **reveals nothing** beyond the fact that the **statement is true**.                   |
+| **Succinct**              | The proof is **very short** and can **be verified quickly**, regardless of the size of the computation. |
+| **Non-interactive**       | No need for multiple rounds of communication; **a single message** is sufficient.               |
+| **Argument of Knowledge** | Ensures that the prover actually "knows" a valid witness, rather than **faking the proof**.     |
+
+---
 
 <img src="https://img.learnblockchain.cn/attachments/2021/11/012YI74G6195bf48ea678.jpg" alt="Logo" width="520" style="position: absolute; bottom: 50px; right: 50px; z-index: 10;" />
 
@@ -384,6 +384,34 @@ section: Conclusion
 * **(Optional: Future Work ideas, if any mentioned or obvious extensions)**
     * Investigating adaptation of honest-majority protocols for privacy-preserving delegation.
     * Further exploring streaming witness generation for unbounded instance sizes (Remark 8.1).
+
+---
+
+# **difference between zkSNARK & zkSTARK**
+
+| 特性       | zkSNARK                                                       | zkSTARK                                                   |
+| -------- | ------------------------------------------------------------- | --------------------------------------------------------- |
+| **全称**   | Zero-Knowledge Succinct Non-interactive Argument of Knowledge | Zero-Knowledge Scalable Transparent Argument of Knowledge |
+| **信任设置** | 需要可信预设（Trusted Setup）                                         | 不需要可信预设                                                   |
+| **证明大小** | 几百字节（较小）                                                      | 数十KB（较大）                                                  |
+| **验证速度** | 快                                                             | 非常快（更快）                                                   |
+| **生成速度** | 较慢（尤其对复杂电路）                                                   | 更快，尤其适合大规模证明                                              |
+| **抗量子性** | 不抗量子攻击                                                        | 抗量子攻击                                                     |
+| **加密原语** | 椭圆曲线密码学（如pairing-based cryptography）                          | 基于哈希函数（如Merkle树、FRI）                                      |
+| **适用场景** | 常用于以太坊隐私协议（如Zcash、Aztec）                                      | 常用于可扩展性方案（如StarkNet、zkRollup）                             |
+| **复杂度**  | 电路复杂性较高、工具链成熟                                                 | 工具较新，电路设计更简单                                              |
+
+---
+
+| 特性         | zkSNARK               | zkSTARK                     |
+| ---------- | --------------------- | --------------------------- |
+| **可信设置**   | 需要可信设置（Trusted Setup） | ✅ 无需可信设置（透明）                |
+| **数学基础**   | 椭圆曲线、对数硬问题（需复杂密码学工具）  | 基于哈希函数（如 Merkle Tree），更量子安全 |
+| **证明大小**   | 小（几百字节）               | 较大（几十 KB 到几 MB）             |
+| **验证速度**   | 极快                    | 快，但比 zkSNARK 稍慢             |
+| **证明生成速度** | 较慢                    | 更快，支持大规模并行                  |
+| **量子抗性**   | ❌ 不抗量子攻击              | ✅ 抗量子攻击                     |
+
 
 ---
 layout: center
