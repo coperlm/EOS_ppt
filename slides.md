@@ -23,6 +23,10 @@ Efficient Private Delegation of zkSNARK Provers
   June 31 2025
 </div>
 
+
+<img src="./slides/Fujian_Normal_University_logo.png" alt="Logo" width="140" style="position: absolute; bottom: 60px; left: 200px; z-index: 10;" />
+
+
 <img src="./slides/我要更加努力.jpg" alt="Logo" width="150" style="position: absolute; bottom: 60px; right: 200px; z-index: 10;" />
 
 
@@ -30,8 +34,152 @@ Efficient Private Delegation of zkSNARK Provers
   class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
   style="font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;"
 >
-  Reference: [1] A. Chiesa et al., "Eos: Efficient Private Delegation of zkSNARK Provers", <i>USENIX Security</i>, 2023.
+  Reference: [1] A. Chiesa et al., Eos: Efficient Private Delegation of zkSNARK Provers, <i>USENIX Security</i>, 2023.
 </div>
+
+---
+section: 通俗讲解EOS是个啥
+---
+
+# **背景介绍**
+
+零知识证明（ZKP, zero-knowledge proof）：你有一个秘密，你想向别人证明你知道这个秘密，但你又不想把秘密本身透露给对方。
+
+zkSNARKs：Z(zero)k(knowledge)S(succinct)N(non-interactive)AR(argument)K(knowledge)，零知识简洁非交互式知识论证。
+
+应用：
+
+ * **保护隐私的加密货币**：可以隐藏交易的发送者、接收者和金额。
+
+ * **保护隐私的智能合约**：可以在不泄露合约具体内容的情况下，证明合约执行的正确性。
+
+<img src=".\slides\image-20250603141723004.png" alt="Logo" width="570" style="position: absolute; bottom: 55px; left: 200px; z-index: 10;" />
+
+<div
+  class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
+  style="font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;"
+>
+  Reference: [1] https://www.youtube.com/watch?v=kIdMXwua4uU (USENIX Security '23 - Eos: Efficient Private Delegation of zkSNARK Provers)
+</div>
+
+---
+
+# **zkSNARKs**
+
+---
+layout: default
+---
+
+# 如果没有zkSNARK
+
+<div class="grid grid-cols-3 gap-4">
+  <div class="pr-4" style="border-right: 1px dashed #718096;">
+
+  ## 传统交互式方案
+
+  如果没有zkSNARK，使用传统ZKP
+
+  证明者 $\mathcal{P}$ 知道 $x$，使得 $y = g^x \mod p$
+
+  $\mathcal{P}$ 选择随机 $r$，计算 $t = g^r \mod p$。
+
+  $\mathcal{P}$ 发送 $t$ 给验证者。
+
+  验证者 $\mathcal{V}$ 发送 $\mathcal{P}$ 一个挑战 $c$。
+
+  $\mathcal{P}$ 计算 $s = r + c·x \mod q$，发送 $s$。
+
+  $\mathcal{V}$ 检查：$g^s \stackrel{?}{=} t·y^c \mod p$
+
+  上述内容即为 **Schnorr协议** 过程
+
+  </div>
+  <div class="px-4" style="border-right: 1px dashed #718096;">
+
+  ## 我想要非交互式滴
+
+  将验证者 $\mathcal{V}$ 的随机挑战 $c$ 改为一个哈希值：$c=H(g,y,t)$
+
+  $\mathcal{P}$ 选择随机 $r$，计算 $t = g^r \mod p$。
+
+  $\mathcal{P}$ 计算挑战：$c=H(g,y,t)$
+
+  $\mathcal{P}$ 计算响应：$s = r + c·x \mod q$
+
+  $\mathcal{P}$ 输出证明：$π = (t, s)$
+
+  $\mathcal{V}$ 重新计算挑战：$c$，检查：<br> $g^s \stackrel{?}{=} t·y^c \mod p$
+
+
+  新增的这一步被称为 **Fiat–Shamir 变换**
+
+  上述内容即为**非交互式 Schnorr 零知识证明（NIZK proof）** 过程
+  </div>
+
+  <div class="pl-4">
+
+  ## 但是哈希函数怎么证明
+
+  哈希函数不具备任何同态性，无法进行代数操作，故而很难使用sigma协议进行验证
+
+  这时就要搬出我们的zkSNARK了~
+  
+  证明者 $\mathcal{P}$ 知道 $x$，使得 $H(x) = y$
+
+  分为四步：
+
+   - 把 $H(x) = y$ 转换为一个 算术电路；
+
+   - 编译这个电路为一组约束（如 R1CS）；
+
+   - 让证明者用 $x$ 生成一个 zk 证明 $π$，表明"存在一个 $x$ 使得约束成立"；
+
+   - 验证者使用公开的 $y$ 和 $π$ 来验证，而无需知道 $x$。
+
+  </div>
+</div>
+
+
+
+
+---
+
+# 面临的挑战
+
+虽然zkSNARKs 很强大，但是生成证明的过程却非常耗时和消耗计算资源。这就带来了一个难题：
+
+ * 如果用户自己生成证明，那么他们的设备可能需要**花费很长时间**，甚至无法完成。
+
+ * 如果把生成证明的任务交给云计算平台，虽然速度快了，但是用户的秘密（比如交易信息、合约内容）就会**暴露**给云计算平台。
+
+
+---
+
+# **EOS 的解决方案**
+
+EOS的核心思想：把生成证明的任务分配给多个“工人”来共同完成。
+
+ * **秘密分享**：用户把自己的秘密分成多份，发给不同的“工人”。 这样，只要有一个“工人”是诚实的，没有和其他“工人”串通，用户的秘密就不会泄露。
+
+ * **高效计算**：EOS 使用了一些特殊的技术，使得“工人”们可以高效地合作生成证明，而不需要消耗太多的计算资源。
+
+ * **安全验证**：EOS 设计了一种新的验证方法，可以确保“工人”们正确地执行了计算，防止他们作弊。
+
+---
+
+# **EOS 的优势**
+
+总的来说，EOS 具有以下优势：
+
+ * **保护隐私**：在生成证明的过程中，用户的秘密不会泄露给任何一个“工人”。
+
+ * **提高效率**：可以显著减少生成证明所需的时间和计算资源。
+
+ * **支持大规模计算**：使得生成复杂计算的证明成为可能，这在以前是很难实现的。
+
+## 纠错
+
+ * 上次讲错的：zkSNARK证明的是一个私有的witness（etc.a pw or a sk）满足一个公开的circuit（etc.运行了一个智能合约的某段逻辑，且得到了正确结果），而非直接证明一个多项式
 
 ---
 section: introduction
@@ -46,7 +194,7 @@ section: introduction
 | **Full Name** | Efficient Outsourcing of SNARKs | Enterprise Operation System |
 | **Field** | Cryptography, zkSNARKs, Secure Computation | Blockchain Systems, Distributed Ledger |
 | **Core Goal** | Privacy-preserving delegation of zkSNARK proving | High-performance, fee-free smart contract platform |
-| **Open Source** | [USENIX](https://www.usenix.org/conference/usenixsecurity23/presentation/chiesa) | [GitHub](https://github.com/EOSIO/eos) |
+| **Open Source** | [USENIX-2023](https://www.usenix.org/conference/usenixsecurity23/presentation/chiesa) | [GitHub-EOS.IO](https://github.com/EOSIO/eos) |
 | **Main Technologies** | zkSNARKs, PIOP, Polynomial Commitments, Secret Sharing | Blockchain VM, Token Economy, Resource Model |
 
 <br>
@@ -65,12 +213,6 @@ section: introduction
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ensp;
   [2] https://github.com/EOSIO/eos
 </div>
-
----
-
-# **Some error last meeting**
-
- * 上次讲错的：zkSNARK证明的是一个私有的witness（etc.a pw or a sk）满足一个公开的circuit（etc.运行了一个智能合约的某段逻辑，且得到了正确结果），而非直接证明一个多项式
 
 ---
 
