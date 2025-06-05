@@ -101,7 +101,7 @@ layout: default
   将 $\mathcal{V}$ 的随机挑战 $c$ 改为一个固定哈希
 
   ---
-  
+
   $\mathcal{P}$ 
   <br> 选择随机 $r$，计算 $t = g^r \mod p$；
   <br> 计算挑战：$c=H(g||y||t)$；
@@ -118,7 +118,6 @@ layout: default
   上述内容即为**非交互式 Schnorr 零知识证明（NIZK proof）** 过程
 
   </div>
-
   <div class="pl-4">
 
   ## 但是哈希函数怎么证明
@@ -126,10 +125,10 @@ layout: default
   Schnorr 协议仅用于离散对数形式，而对其他函数（多项式或哈希函数等）无能为力
 
   这时就要搬出我们的 $\text{zkSNARK}$ 了~
-  
+
   证明者 $\mathcal{P}$ 知道 $x$，使得 $H(x) = y$
 
-  分为四步：
+  分为四步：（具体见第二部分）
 
    - 把 $H(x) = y$ 转换为一个 算术电路；
 
@@ -141,50 +140,6 @@ layout: default
 
   </div>
 </div>
-
----
-
-# **zkSNARK如何实现**
-
-zkSNARK的关键组件
-
-R1CS
-
-QAP
-
-
-
-<img src="https://img.learnblockchain.cn/attachments/2021/11/012YI74G6195bf48ea678.jpg" alt="Logo" width="520" style="position: absolute; bottom: 50px; right: 50px; z-index: 10;" />
-
-<div
-  class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
-  style="font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;"
->
-  Reference: [1] https://zhuanlan.zhihu.com/p/38205067<br>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ensp;
-  [2] https://learnblockchain.cn/article/3220<br>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ensp;
-  [3] https://github.com/slowmist/zkSnark-Groth16-Getting-Started
-</div>
-
----
-
-# R1CS
-
-R1CS：Rank-1 Constraint System，秩1约束系统
-
-用数学等式来描述 **一个程序在输入某些值时该如何运作**
-
-秩1：矩阵只有一个现行独立的行/列
-
-R1CS表达每个约束为一个三元乘法等式
-
-$\langle\vec{a},\vec{w}\rangle\cdot\langle\vec{b},\vec{w}\rangle=\langle\vec{c},\vec{w}\rangle$
-
-其中：
- - $\vec{a},\vec{b},\vec{c}$ 是**系数向量**
- - $\vec{w}$ 是**变量向量**，包括输入输出和中间变量
- - $\langle\cdot,\cdot\rangle$ 是**向量内积**
 
 ---
 
@@ -224,6 +179,169 @@ EOS的核心思想：把生成证明的任务分配给多个“工人”来共�
 ## 纠错
 
  * 上次讲错的：zkSNARK证明的是一个私有的witness（etc.a pw or a sk）满足一个公开的circuit（etc.运行了一个智能合约的某段逻辑，且得到了正确结果），而非直接证明一个多项式
+
+---
+section: zkSNARK基础知识
+---
+
+# zkSNARK的关键组件
+
+温馨提示：本章开始，难度飙升
+
+大致流程：
+
+ * 将多项式先抽象成算数门（加减乘除）
+
+ * 将算数门 “拍平” 为 $\textbf{R1CS}$ 的电路表现形式
+
+ * 转化为 $\textbf{QAP}$ 的形式，旨在快速验证整个电路
+
+ * 利用双线性对隐藏解向量 $\vec{s}$
+
+ * 生成并输出证明
+
+<img src="./slides/clueZK.png" alt="Logo" width="120" style="position: absolute; top: 130px; left: 380px; z-index: 10;" />
+
+<div class="absolute top-28 right-20 w-[40%] scale-[0.9]" >
+
+| 布尔门   | 对应算数操作 |
+| ---     | ---         |
+| A AND B | A × B       |
+| A OR B  | A + B - A×B |
+| NOT A   | 1 - A       |
+
+其中所有变量 $A,B\in\{0,1\}$。
+
+</div>
+
+<img src=".\slides\012YI74G6195bf48ea678.jpg" alt="Logo" width="400" style="position: absolute; bottom: 30px; right: 60px; z-index: 10;" />
+
+<div
+  class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
+  style="font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;"
+>
+  Reference: [1] https://zhuanlan.zhihu.com/p/38205067<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ensp;
+  [2] https://learnblockchain.cn/article/3220<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ensp;
+  [3] https://github.com/slowmist/zkSnark-Groth16-Getting-Started
+</div>
+
+---
+
+# R1CS-电路“拍平”
+
+
+<div v-click.hide>
+<div class="absolute top-35 w-[40%] scale-[1]" >
+
+
+R1CS：Rank-1 Constraint System，秩1约束系统
+
+用数学等式来描述 **一个程序在输入某些值时该如何运作**
+
+秩1：矩阵只有一个现行独立的行/列
+
+将**一步算数门**操作等价转化为 $(\vec{a}\cdot\vec{s})*(\vec{b}\cdot\vec{s})-\vec{c}\cdot\vec{s}=0$ 
+
+其中：
+ - $\vec{a},\vec{b},\vec{c}$ 每**一步**运算都有单独的一组
+ - $\vec{s}$ 被称为**解向量**，一个电路中只有一个
+
+ - ---
+
+<br>
+<!-- ![](./slides/指示箭头.jpg) -->
+
+```
+s=( one ,  x  , out ,sym_1,  y  ,sym_2)
+a=[  0  ,  1  ,  0  ,  0  ,  0  ,  0  ]
+b=[  0  ,  1  ,  0  ,  0  ,  0  ,  0  ]
+c=[  0  ,  0  ,  0  ,  1  ,  0  ,  0  ]
+
+```
+
+</div>
+</div>
+
+<div class="absolute top-35 right-20 w-[40%] scale-[1]" >
+
+对于一个函数
+
+```
+def qeval(x):
+    y = x**3
+    return x + y + 5
+```
+
+将它拍平成以下语句：
+
+<img src="./slides/paiping.png" alt="Logo" width="150" style="position: absolute; top: 130px; left: 150px; z-index: 10;" />
+
+<br><br>
+
+$\vec{s}$ 为解向量，其结构为 $(~one,x,~out,sym_1,y,sym_2)$
+
+对于 $x*x-sym_1=0$（即第一步），等价于
+
+```
+a=[0,1,0,0,0,0],b=[0,1,0,0,0,0],c=[0,0,0,1,0,0]
+```
+
+此时满足 $(\vec{a}\cdot\vec{s})*(\vec{b}\cdot\vec{s})-\vec{c}\cdot\vec{s}=0$
+
+</div>
+
+<div v-after>
+<div class="absolute top-35 w-[40%] scale-[1]" >
+
+同理可得
+
+等式二 $sym_1*x-y=0$ $&nbsp$ 等价于
+
+```
+a=[0,0,0,1,0,0],b[0,1,0,0,0,0],c=[0,0,0,0,1,0]
+```
+
+等式三 $(y+x)*1-sym_2=0$ $&nbsp$ 等价于
+
+```
+a=[0,1,0,0,1,0],b=[1,0,0,0,0,0],c=[0,0,0,0,0,1]
+```
+
+等式四 $(sym_2+5)*1-(~out)=0$ $&nbsp$ 等价于
+
+```
+a=[5,0,0,0,0,1],b=[1,0,0,0,0,0],c=[0,0,1,0,0,0]
+```
+
+<br>
+
+<div class="text-xl text-center mt--8">
+
+**证明者知道witness $\Leftrightarrow$ 每组拍平后的电路都成立**
+
+</div>
+
+现在存在两个问题：其一是我们需要验证每个拍平后的式子，时间复杂度过高速度难以接受（电路一般都很大很大）；其二是witness包含于 $\vec{s}$，故而我们需要隐藏它
+
+</div>
+</div>
+
+---
+
+# QAP-转为多项式，快速验证
+
+
+---
+
+# 双线性对-隐藏解向量s
+
+
+---
+
+# 生成最终证明
+
 
 ---
 section: introduction
