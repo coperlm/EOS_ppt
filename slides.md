@@ -359,17 +359,17 @@ a=[5,0,0,0,0,1],b=[1,0,0,0,0,0],c=[0,0,1,0,0,0]
 
 第一 **列** 可以取到点 `(1,0),(2,0),(3,0),(4,5)`
 
-插值得到多项式 $f(x)=0.833x^3-5x^2+9.166x-5$
+插值得到多项式 $f(x)=-5+9.166x-5x^2+0.833x^3$
 
-即数列 $[0.833,-5,9.166,-5]$
+即数列 $[-5,9.166,-5,0.833]$
 
 同理可得总计 **18** 个类似的四元数列
 
-<img src="./slides/queue.png" alt="Logo" width="170" style="position: absolute; top: 8px; left: 400px; z-index: 10;" />
+<img src="./slides/queue.png" alt="Logo" width="150" style="position: absolute; top: 20px; left: 400px; z-index: 10;" />
 
 </div>
 
-<div class="absolute top-45 left-185 w-[35%] scale-[1]" >
+<div class="absolute top-45 left-180 w-[35%] scale-[1]" >
 
 将 $x=1$ 分别带入这18个多项式，得到
 
@@ -387,13 +387,16 @@ a=[5,0,0,0,0,1],b=[1,0,0,0,0,0],c=[0,0,1,0,0,0]
 
 定义 $Z(x)=(x-1)(x-2)(x-3)(x-4)$
 
-如果 $A(x)*B(x)-C(x)$ 可以被 $Z(x)$ 整除，我们就认为其可以满足所有约束
+如果 $A(x)*B(x)-C(x)$ 可以被 $Z(x)$ 整除，我们就认为其可以满足所有约束（一次计算）
 
 </div>
 
 ---
 
 # 双线性对-隐藏解向量s
+
+
+
 
 
 ---
