@@ -151,7 +151,6 @@ layout: default
 
  * 如果把生成证明的任务交给云计算平台，虽然速度快了，但是用户的秘密（比如交易信息、合约内容）就会**暴露**给云计算平台。
 
-
 ---
 
 # **EOS 的解决方案**
@@ -194,13 +193,16 @@ section: zkSNARK基础知识
 
  * 将算数门 “拍平” 为 $\textbf{R1CS}$ 的电路表现形式
 
- * 转化为 $\textbf{QAP}$ 的形式，旨在快速验证整个电路
+ * 转化为 $\textbf{QAP}$ 的形式，旨在**快速验证**整个电路
 
- * 利用双线性对隐藏解向量 $\vec{s}$
+ * 利用**双线性对** **隐藏**解向量 $\vec{s}$
 
  * 生成并输出证明
+ ---
 
-<img src="./slides/clueZK.png" alt="Logo" width="120" style="position: absolute; top: 130px; left: 380px; z-index: 10;" />
+本章旨在介绍zkSNARK是如何工作的，以及<br>Groth16算法的基础差异，而非直接讲解EOS<br>但对理解EOS和Siniel是如何工作的至关重要
+
+<img src="./slides/clueZK.png" alt="Logo" width="120" style="position: absolute; top: 130px; left: 370px; z-index: 10;" />
 
 <div class="absolute top-28 right-20 w-[40%] scale-[0.9]" >
 
@@ -210,11 +212,15 @@ section: zkSNARK基础知识
 | A OR B  | A + B - A×B |
 | NOT A   | 1 - A       |
 
-其中所有变量 $A,B\in\{0,1\}$。
+</div>
+
+<div class="absolute top-67 right-10 w-[18%] scale-[0.7]" >
+
+其中 $A,B\in\{0,1\}$。
 
 </div>
 
-<img src=".\slides\012YI74G6195bf48ea678.jpg" alt="Logo" width="400" style="position: absolute; bottom: 30px; right: 60px; z-index: 10;" />
+<img src=".\slides\012YI74G6195bf48ea678.jpg" alt="Logo" width="470" style="position: absolute; bottom: 30px; right: 30px; z-index: 10;" />
 
 <div
   class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
@@ -250,8 +256,10 @@ R1CS：Rank-1 Constraint System，秩1约束系统
 
  - ---
 
-<br>
+<!-- <br> -->
 <!-- ![](./slides/指示箭头.jpg) -->
+
+举个例子：
 
 ```
 s=( one ,  x  , out ,sym_1,  y  ,sym_2)
@@ -300,7 +308,7 @@ a=[0,1,0,0,0,0],b=[0,1,0,0,0,0],c=[0,0,0,1,0,0]
 等式二 $sym_1*x-y=0$ $&nbsp$ 等价于
 
 ```
-a=[0,0,0,1,0,0],b[0,1,0,0,0,0],c=[0,0,0,0,1,0]
+a=[0,0,0,1,0,0],b=[0,1,0,0,0,0],c=[0,0,0,0,1,0]
 ```
 
 等式三 $(y+x)*1-sym_2=0$ $&nbsp$ 等价于
@@ -317,13 +325,13 @@ a=[5,0,0,0,0,1],b=[1,0,0,0,0,0],c=[0,0,1,0,0,0]
 
 <br>
 
-<div class="text-xl text-center mt--8">
+<div class="text-xl text-center mt--7">
 
 **证明者知道witness $\Leftrightarrow$ 每组拍平后的电路都成立**
 
 </div>
 
-现在存在两个问题：其一是我们需要验证每个拍平后的式子，时间复杂度过高速度难以接受（电路一般都很大很大）；其二是witness包含于 $\vec{s}$，故而我们需要隐藏它
+两个问题：1. 需验证每个拍平后的式子，时间复杂度过高；<br>2. witness包含于 $\vec{s}$，我们需要隐藏它（witness即为输入）。
 
 </div>
 </div>
@@ -332,6 +340,56 @@ a=[5,0,0,0,0,1],b=[1,0,0,0,0,0],c=[0,0,1,0,0,0]
 
 # QAP-转为多项式，快速验证
 
+前置知识-拉格朗日插值法：在笛卡尔直角坐标系上，输入n个点，输出一个n次多项式（形式为$f(x)=\sum_{i=0}^na_ix^i$，其中$a_i$为每项系数）
+
+<div class="absolute top-45 left-15 w-[40%] scale-[1]" >
+
+把使用R1CS约束后的电路搬到这里来
+
+```
+a=[0,1,0,0,0,0],b=[0,1,0,0,0,0],c=[0,0,0,1,0,0]
+a=[0,0,0,1,0,0],b=[0,1,0,0,0,0],c=[0,0,0,0,1,0]
+a=[0,1,0,0,1,0],b=[1,0,0,0,0,0],c=[0,0,0,0,0,1]
+a=[5,0,0,0,0,1],b=[1,0,0,0,0,0],c=[0,0,1,0,0,0]
+```
+
+把它看成一个**4行18列**的大矩阵
+
+按列来取点，横坐标为 $i\in[1,行数]$
+
+第一 **列** 可以取到点 `(1,0),(2,0),(3,0),(4,5)`
+
+插值得到多项式 $f(x)=0.833x^3-5x^2+9.166x-5$
+
+即数列 $[0.833,-5,9.166,-5]$
+
+同理可得总计 **18** 个类似的四元数列
+
+<img src="./slides/queue.png" alt="Logo" width="170" style="position: absolute; top: 8px; left: 400px; z-index: 10;" />
+
+</div>
+
+<div class="absolute top-45 left-185 w-[35%] scale-[1]" >
+
+将 $x=1$ 分别带入这18个多项式，得到
+
+`0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0`
+
+正好是第一个约束下的三个向量 $\vec{a},\vec{b},\vec{c}$
+
+`(0,1,0,0,0,0),(0,1,0,0,0,0),(0,0,0,1,0,0)`
+
+同理 $x=2,3,4$ 依次可以得到第二、三、四个约束
+
+令 $A(x)=\vec{s}\cdot\vec{a},B(x)=\vec{s}\cdot\vec{b},C(x)=\vec{s}\cdot\vec{c}$
+
+检验 $x=1,2,3,4$ 下 $A(x)*B(x)-C(x)=0$ 是否成立，本质是检查R1CS的四个约束是否都满足
+
+定义 $Z(x)=(x-1)(x-2)(x-3)(x-4)$
+
+如果 $A(x)*B(x)-C(x)$ 可以被 $Z(x)$ 整除，我们就认为其可以满足所有约束
+
+</div>
 
 ---
 
@@ -342,6 +400,12 @@ a=[5,0,0,0,0,1],b=[1,0,0,0,0,0],c=[0,0,1,0,0,0]
 
 # 生成最终证明
 
+
+---
+
+# Groth16：最常用的zkSNARK之一
+
+https://yangzhe.me/2023/10/19/protocol-of-groth16
 
 ---
 section: introduction
