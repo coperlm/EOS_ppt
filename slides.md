@@ -143,47 +143,62 @@ layout: default
 
 ---
 
-# 面临的挑战
+# **Eos: 高效外包SNARKs**
 
-虽然zkSNARKs 很强大，但是生成证明的过程却非常耗时和消耗计算资源。这就带来了一个难题：
+<div class="grid grid-cols-2 gap-4 max-h-[300px]">
+  <div class="bg-blue-100 p-4">
 
- * 如果用户自己生成证明，那么他们的设备可能需要**花费很长时间**，甚至无法完成。
+  ## **面临的挑战**
 
- * 如果把生成证明的任务交给云计算平台，虽然速度快了，但是用户的秘密（比如交易信息、合约内容）就会**暴露**给云计算平台。
+  虽然zkSNARKs 很强大，但是生成证明的过程却非常耗时和消耗计算资源。这就带来了一个难题：
 
----
+  * 如果用户自己生成证明，那么他们的设备可能需要**花费很长时间**，甚至无法完成。
 
-# **EOS 的解决方案**
+  * 如果把生成证明的任务交给云计算平台，虽然速度快了，但是用户的秘密就会**暴露**给云计算平台。
 
-EOS的核心思想：把生成证明的任务分配给多个“工人”来共同完成。
+  * 亟需一个可以在短期时间安全计算的算法
 
- * **秘密分享**：用户把自己的秘密分成多份，发给不同的“工人”。 这样，只要有一个“工人”是诚实的，没有和其他“工人”串通，用户的秘密就不会泄露。
+  </div>
+  <div class="bg-green-100 p-4">
 
- * **高效计算**：EOS 使用了一些特殊的技术，使得“工人”们可以高效地合作生成证明，而不需要消耗太多的计算资源。
+  ## **EOS 的解决方案**
 
- * **安全验证**：EOS 设计了一种新的验证方法，可以确保“工人”们正确地执行了计算，防止他们作弊。
+  EOS的核心思想：把生成证明的任务分配给多个“工人”来共同完成。
 
----
+  * **秘密分享**：用户把自己的秘密分成多份，发给不同的“工人”。 这样，只要有**一个**“工人”是诚实的，没有和其他“工人”串通，用户的秘密就不会泄露。
 
-# **EOS 的优势**
+  * **高效计算**：EOS 使用了一些特殊的技术，使得“工人”们可以高效地合作生成证明，而不需要消耗太多的计算资源。
 
-总的来说，EOS 具有以下优势：
+  * **安全验证**：EOS 设计了一种新的验证方法，可以确保“工人”们正确地执行了计算，防止他们作弊。
 
- * **保护隐私**：在生成证明的过程中，用户的秘密不会泄露给任何一个“工人”。
+  </div>
+</div>
 
- * **提高效率**：可以显著减少生成证明所需的时间和计算资源。
+<br>
 
- * **支持大规模计算**：使得生成复杂计算的证明成为可能，这在以前是很难实现的。
+  ---
 
-## 纠错
-
- * 上次讲错的：zkSNARK证明的是一个私有的witness（etc.a pw or a sk）满足一个公开的circuit（etc.运行了一个智能合约的某段逻辑，且得到了正确结果），而非直接证明一个多项式
+上次讲错的：zkSNARK证明的是一个私有的witness（etc.a pw or a sk）满足一个公开的circuit（etc.多项式），而非直接证明一个多项式<br>
+但是，可以将证明witness的问题转化成（规约到）证明多项式的问题
 
 ---
 section: zkSNARK基础知识
 ---
 
-# zkSNARK的关键组件
+# **zkSNARK 是什么？**
+
+  * 证明者可以证明自己知道某个秘密值 $w$，使得关系 $F(x,w)=1$ 成立，而无需泄露 $w$ 的任何信息。<br><br>
+
+| 特性 | 含义 |
+| ---- | ---- |
+| **零知识性** <br>**(Zero-Knowledge)** | 除了"陈述为真"这一信息外，不向验证者泄露任何关于秘密 $w$ 的其他信息。 |
+| **简洁性** <br>**(Succinct)** | 生成的证明非常简短，且验证过程极快，其复杂度与计算规模几乎无关。 |
+| **非交互性** <br>**(Non-interactive)** | 证明过程只需一次消息传递，无需多轮交互对话。 |
+| **知识论证** <br>**(Argument of Knowledge)** | 确保证明者确实"知道"符合条件的见证值 $w$，而非通过其他方式伪造证明。 |
+
+---
+
+# **zkSNARK的关键组件**
 
 温馨提示：本章开始，难度飙升
 
@@ -235,7 +250,7 @@ section: zkSNARK基础知识
 
 ---
 
-# R1CS-电路“拍平”
+# **R1CS-电路“拍平”**
 
 
 <div v-click.hide>
@@ -256,9 +271,6 @@ R1CS：Rank-1 Constraint System，秩1约束系统
 
  - ---
 
-<!-- <br> -->
-<!-- ![](./slides/指示箭头.jpg) -->
-
 举个例子：
 
 ```
@@ -266,7 +278,6 @@ s=( one ,  x  , out ,sym_1,  y  ,sym_2)
 a=[  0  ,  1  ,  0  ,  0  ,  0  ,  0  ]
 b=[  0  ,  1  ,  0  ,  0  ,  0  ,  0  ]
 c=[  0  ,  0  ,  0  ,  1  ,  0  ,  0  ]
-
 ```
 
 </div>
@@ -338,7 +349,7 @@ a=[5,0,0,0,0,1],b=[1,0,0,0,0,0],c=[0,0,1,0,0,0]
 
 ---
 
-# QAP-转为多项式，快速验证
+# **QAP-转为多项式，快速验证**
 
 前置知识-拉格朗日插值法：在笛卡尔直角坐标系上，输入n个点，输出一个n次多项式（形式为$f(x)=\sum_{i=0}^na_ix^i$，其中$a_i$为每项系数）
 
@@ -393,16 +404,57 @@ a=[5,0,0,0,0,1],b=[1,0,0,0,0,0],c=[0,0,1,0,0,0]
 
 ---
 
-# 双线性对-隐藏解向量s
+# **双线性对-隐藏解向量s 和 生成最终证明**
 
 
+<div class="absolute top-35 w-[40%] scale-[1]" >
+
+$
+\pi_a=G*A(t)\\
+\pi_b=G*B(t)\\
+\pi_c=G*C(t)\\
+\pi_h=G*H(t)
+$
+
+要验证 $A*B-C=H*Z$
+
+只需验证 $e(\pi_a,\pi_b)/e(\pi_c,G)=e(\pi_h,G*Z(t))$
+
+$\pi=(\pi_a,\pi_b,\pi_c)$，$G$ 和 $Z(t)$ 为公开参数
+
+最终证明只需将公共输入嵌入双线性映射中即可
+
+ ---
+
+具体算法具体构造，例如在Groth16中，需验证：
+
+$
+e(\pi_a,\pi_b)=e(\alpha ,\beta )\cdot e(\sum x_i\cdot u_i,\gamma)\cdot e(\pi_c,\delta)
+$
+
+除了承诺，其他元素皆来自 Trusted Setup，和公共输入相关
+
+</div>
+
+<div class="absolute top-35 right-5 w-[50%] scale-[1]" >
+
+|元素|群域|用途|
+|---|---|---|
+| `α·G₁` | G1 | 用于构造证明中的 A |
+| `β·G₂` | G2 | 用于构造证明中的 B |
+| `γ·G₂` | G2 | 绑定公共输入 |
+| `δ·G2` | G2 | 保证完整性（用来防止伪造） |
+| 更多：如 `Aᵢ(s)/δ`, `Bᵢ(s)/δ`, `Cᵢ(s)/δ`, `H(s)/δ` 等 | G1, G2 | Prover 用                                |
 
 
+</div>
 
----
-
-# 生成最终证明
-
+<div
+  class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
+  style="font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;"
+>
+Reference:[1] On the Size of Pairing-based Non-interactive Arguments?
+</div>
 
 ---
 
@@ -410,13 +462,20 @@ a=[5,0,0,0,0,1],b=[1,0,0,0,0,0],c=[0,0,1,0,0,0]
 
 https://yangzhe.me/2023/10/19/protocol-of-groth16
 
+
+---
+
+# 开始和上次讲的内容接轨了-用多项式来证明
+
+
+
 ---
 section: introduction
 ---
 
 <div class="text-xl" style="transform: scale(0.9); transform-origin: top left; display: inline-block;">
 
-# 🔍 Comparison: EOS in zkSNARK Research vs EOS.IO Blockchain Platform
+# 🔍 **Comparison: EOS in zkSNARK Research vs EOS.IO Blockchain Platform**
 
 | Category | EOS (zkSNARK paper) | EOS.IO (Blockchain Platform) |
 |----------|---------------------|-------------------------------|
@@ -445,20 +504,7 @@ section: introduction
 
 ---
 
-# **What are zkSNARKs?**
-
-  * Prove knowledge of a secret witness $w$ for a statement $F(x,w)=1$ without revealing $w$.
-
-| **Property**              | **Meaning**                                                                                     |
-| ------------------------- | ----------------------------------------------------------------------------------------------- |
-| **Zero-Knowledge**        | The proof **reveals nothing** beyond the fact that the **statement is true**.                   |
-| **Succinct**              | The proof is **very short** and can **be verified quickly**, regardless of the size of the computation. |
-| **Non-interactive**       | No need for multiple rounds of communication; **a single message** is sufficient.               |
-| **Argument of Knowledge** | Ensures that the prover actually "knows" a valid witness, rather than **faking the proof**.     |
-
----
-
-# 喵喵喵
+# **Motivation**
 
 **The Problem:**
 
@@ -474,7 +520,7 @@ section: introduction
 
 ---
 
-# Eos: Contributions Overview
+# **Eos: Contributions Overview**
 
 * **Eos (Efficient Outsourcing of SNARKs):**
     * Privacy-preserving delegation protocols for zkSNARKs with universal setup.
@@ -490,7 +536,7 @@ section: introduction
 
 ---
 
-# Related Work (Brief Highlights)
+# **Related Work (Brief Highlights)**
 
 * **Trinocchio:** Outsourcing with MPC and zkSNARKs.
     * Differences: Targets a zkSNARK with circuit-specific setup, uses Shamir secret sharing (privacy against n/2 corruptions), semi-honest security.
@@ -529,6 +575,19 @@ A **Polynomial Interactive Oracle Proof (PIOP)** is an interactive protocol betw
   * The **Verifier (V)**, given `x`, sends messages (challenges) to the prover and queries the prover's polynomials and the indexed polynomials.
 * **Properties**: The PIOPs considered in Eos are required to achieve perfect completeness, negligible knowledge soundness error, and zero knowledge.
 * **Role in zkSNARKs**: PIOPs are an information-theoretic component used to construct zkSNARKs.
+
+---
+
+# PIOP2
+
+<img src="./slides/PIOP.png" alt="Logo" width="800" style="position: absolute; top: 120px; left: 50% ; transform: translateX(-50%); z-index: 10;" />
+
+<div
+  class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
+  style="font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;"
+>
+Reference:[1] The PLONK Polynomial Interactive Oracle Proof (PIOP) — Stanford Course Notes(https://cs355.stanford.edu/lectures/Lecture12-plonk.pdf)
+</div>
 
 ---
 
