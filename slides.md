@@ -457,16 +457,123 @@ Reference:[1] On the Size of Pairing-based Non-interactive Arguments?
 </div>
 
 ---
+section: Marlin：basic of EOS
+---
 
-# Groth16：最常用的zkSNARK之一
+# **What is Marlin**
 
-https://yangzhe.me/2023/10/19/protocol-of-groth16
+**Marlin**: a general zkSNARK protocol based on Polynomial Interactive Proofs (PIOPs) and Polynomial Commitment Schemes (PCS).
+<div class="grid grid-cols-3 gap-4">
+  <div class="bg-green-100 p-4 col-span-2">
+
+  |  | Groth16 | Marlin |
+  |------|---------|--------|
+  | **Trusted Setup(SRS)** | Circuit-specific and non-updateable | Universal and updateable |
+  | **Proof Size** | Smaller(128 bytes over BN-256) | Larger(704 bytes over BN-256) |
+  | **Prover Time** | faster | slower but comparable |
+  | **Verifier Time** | Faster | 3 times slower than Groth16 |
+  | **Underlying Framework** | Quadratic Arithmetic Programs(QAP) | Algebraic Holohraphic Proofs(AHP) |
+
+  </div>
+  <div class="bg-blue-100 p-4">
+
+  **Applications in EOS**
+  * Marlin's PIOP structure makes it naturally suitable for **distributed computation**
+  * Polynomial operations can be efficiently **secret-shared**
+  * Supports EOS's **multi-worker** collaborative proof generation
+  </div>
+</div>
+
 
 
 ---
 
-# 开始和上次讲的内容接轨了-用多项式来证明
+# **Marlin Protocol Workflow**
 
+<div class="grid grid-cols-3 gap-4 text-xl">
+  <div class="pr-4" style="border-right: 1px dashed #718096;">
+
+  ## Offline Preprocessing
+
+  Circuit -> Key
+
+  * **ipk (Indexed Proving Key)**: Contains **preprocessed polynomials** and **proving parameters** for proof generation.
+  * **ivk (Indexed Verification Key)**: Contains the **circuit digest** and **verification parameters** for proof validation.
+
+  </div>
+  <div class="px-4" style="border-right: 1px dashed #718096;">
+
+  ## Polynomial Commitment
+
+  witness -> function -> commitment
+
+  * Transform **witness** into **proof polynomials**
+  * Generate polynomial commitments using $ipk$:
+
+  Commitments cryptographically bind polynomials while preserving zero-knowledge
+
+  </div>
+  <div class="pl-4">
+
+  ## Evaluation & Proof
+
+  commitment -> provement($\pi$)
+
+  Verifier sends random challenge points, prover computes:
+  * Polynomial evaluations at query points: $v$
+  * Batch evaluation proof: $\pi_{pc}$
+
+  return $\pi = (C, v, \pi_{pc})$
+
+  Ensures consistency between commitments, evaluations, and underlying polynomials
+
+
+将摘要从线性降为常数
+  </div>
+</div>
+
+---
+
+# **Marlin中的多项式承诺**
+
+Marlin 使用 **KZG 多项式承诺方案**，这对EOS的设计至关重要：
+
+<div class="grid grid-cols-2 gap-4">
+  <div class="bg-orange-100 p-4">
+
+  ## **KZG 承诺的特性**
+
+  * **同态性**：$\text{Commit}(f + g) = \text{Commit}(f) + \text{Commit}(g)$
+  * **批量验证**：可以同时验证多个多项式评估
+  * **简洁性**：承诺大小为常数（一个椭圆曲线点）
+
+  **承诺过程**：
+  ```
+  Setup: g^{τ^0}, g^{τ^1}, ..., g^{τ^d}
+  Commit(f): C = g^{f(τ)}
+  Prove(f, z): π = g^{(f(τ)-f(z))/(τ-z)}
+  Verify: e(C/g^{f(z)}, g) = e(π, g^{τ}/g^z)
+  ```
+
+  </div>
+  <div class="bg-purple-100 p-4">
+
+  ## **在EOS中的优势**
+
+  * **可加性**：秘密共享后的多项式可以直接相加
+  * **线性性**：多标量乘法可以分布式计算
+  * **高效验证**：验证者只需检查双线性对等式
+
+  **分布式承诺**：
+  ```
+  f(X) = f₁(X) + f₂(X) + ... + fₙ(X)
+  C = g^{f₁(τ)} · g^{f₂(τ)} · ... · g^{fₙ(τ)}
+  ```
+
+  每个工人可以独立计算自己的部分承诺
+
+  </div>
+</div>
 
 
 ---
@@ -781,8 +888,6 @@ section: Evaluation
         * Worker-Worker: Eos requires ~5x less.
 * **Reason for Improvement:** Eos's delegation-specific design choices (leveraging honest delegator, PIOP consistency checkers) are more efficient in this setting than general collaborative proving tools.
 
----
-section: Conclusion
 ---
 
 # Conclusion & Future Work
