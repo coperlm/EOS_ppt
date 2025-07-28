@@ -38,7 +38,7 @@ Efficient Private Delegation of zkSNARK Provers
 </div>
 
 ---
-section: 通俗讲解EOS是个啥
+section: 通俗讲解EOS是什么
 ---
 
 # **背景介绍**
@@ -53,7 +53,7 @@ zkSNARKs：Z(zero)k(knowledge)S(succinct)N(non-interactive)AR(argument)K(knowled
 
  * **保护隐私的智能合约**：可以在不泄露合约具体内容的情况下，证明合约执行的正确性。
 
-<img src=".\slides\image-20250603141723004.png" alt="Logo" width="570" style="position: absolute; bottom: 55px; left: 200px; z-index: 10;" />
+<img src=".\slides\zkP_ori.png" alt="Logo" width="600" style="position: absolute; bottom: 55px; left: 200px; z-index: 10;" />
 
 <div
   class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
@@ -150,36 +150,32 @@ layout: default
 
   ## **面临的挑战**
 
-  虽然zkSNARKs 很强大，但是生成证明的过程却非常耗时和消耗计算资源。这就带来了一个难题：
+  虽然zkSNARKs 很强大，但是生成证明的过程却非常耗时和消耗计算资源。
 
-  * 如果用户自己生成证明，那么他们的设备可能需要**花费很长时间**，甚至无法完成。
+  * 用户自己生成证明->设备花费**很长时间**，甚至无法完成。
 
-  * 如果把生成证明的任务交给云计算平台，虽然速度快了，但是用户的秘密就会**暴露**给云计算平台。
+  * 把生成证明的任务交给云计算平台->速度快了，但用户的秘密就会**暴露**给云计算平台。
 
-  * 亟需一个可以在短期时间安全计算的算法
+  <img src=".\slides\p2p.png" alt="Logo" width="450" style="position: absolute; bottom: 30px; left: 45px; z-index: 20;" />
 
   </div>
   <div class="bg-green-100 p-4">
 
   ## **EOS 的解决方案**
 
-  EOS的核心思想：把生成证明的任务分配给多个“工人”来共同完成。
+  核心思想：把生成证明的任务分配给多个“工人”来共同完成。
 
-  * **秘密分享**：用户把自己的秘密分成多份，发给不同的“工人”。 这样，只要有**一个**“工人”是诚实的，没有和其他“工人”串通，用户的秘密就不会泄露。
-
-  * **高效计算**：EOS 使用了一些特殊的技术，使得“工人”们可以高效地合作生成证明，而不需要消耗太多的计算资源。
+  * **秘密分享**：用户把自己的秘密分成多份，发给不同的“工人”。只要有**一个**“工人”是诚实的，用户的秘密就不会泄露。
 
   * **安全验证**：EOS 设计了一种新的验证方法，可以确保“工人”们正确地执行了计算，防止他们作弊。
+
+  <img src=".\slides\EOS.png" alt="Logo" width="435" style="position: absolute; bottom: 30px; right: 48px; z-index: 20;" />
 
   </div>
 </div>
 
 <br>
 
-  ---
-
-上次讲错的：zkSNARK证明的是一个私有的witness（etc.a pw or a sk）满足一个公开的circuit（etc.多项式），而非直接证明一个多项式<br>
-但是，可以将证明witness的问题转化成（规约到）证明多项式的问题
 
 ---
 section: zkSNARK基础知识
@@ -500,6 +496,8 @@ section: Marlin：basic of EOS
   * **ipk (Indexed Proving Key)**: Contains **preprocessed polynomials** and **proving parameters** for proof generation.
   * **ivk (Indexed Verification Key)**: Contains the **circuit digest** and **verification parameters** for proof validation.
 
+  $O(n)\rightarrow O(1)$
+
   </div>
   <div class="px-4" style="border-right: 1px dashed #718096;">
 
@@ -527,8 +525,6 @@ section: Marlin：basic of EOS
 
   Ensures consistency between commitments, evaluations, and underlying polynomials
 
-
-将摘要从线性降为常数
   </div>
 </div>
 
@@ -613,57 +609,62 @@ section: introduction
 
 # **Motivation**
 
-**The Problem:**
+The Problem:
 
-  * Generating zkSNARKs is computationally expensive (time and memory).
-  * This limits their use in resource-constrained environments (e.g., mobile devices) and for complex computations.
+  * Generating zkSNARKs is **computationally expensive** (time and memory).
+  * This limits their use in **resource-constrained environments** (e.g., mobile devices) and for complex computations.
 
-**Existing Approaches & Their Limitations:**
+Existing Approaches & Limitations:
 
-  * **Local Proving:** Too slow or resource-intensive for many users/applications.
-  * **Cloud Delegation (e.g., DIZK):** Powerful servers can generate proofs faster, BUT this sacrifices privacy by revealing the secret witness $w$ to the cloud. Problematic for privacy-focused applications like private currencies or decentralized computation.
+  * Local Proving: Too **slow** and **resource-intensive for** many users/applications.
+  * Cloud Delegation: Powerful servers can generate proofs faster, BUT this sacrifices privacy by **revealing the secret witness** $w$ to the cloud. Problematic for privacy-focused applications like private currencies or decentralized computation.
 
-**The Central Question:** Can users privately and efficiently outsource zkSNARK proving to untrusted machines?
+The Central Question: Can users **privately** and **efficiently** outsource zkSNARK proving to untrusted machines?
 
 ---
 
 # **Eos: Contributions Overview**
 
-* **Eos (Efficient Outsourcing of SNARKs):**
-    * Privacy-preserving delegation protocols for zkSNARKs with universal setup.
-    * Enables a prover (delegator) to outsource proof generation to a set of workers.
-* **Key Features & Guarantees:**
-    * **Privacy:** No private information (witness `w`) revealed if at least one worker is honest and doesn't collude with others.
-    * **Security:** Secure against malicious workers without relying on heavyweight cryptographic tools.
-    * **Efficiency (compared to local proving on a recent smartphone):**
+* Key Features & Guarantees:
+    * Privacy: No private information (witness `w`) revealed if at least one worker is honest and doesn't collude with others.
+    * Security: Secure against malicious workers without relying on heavyweight cryptographic tools.
+    * Efficiency (compared to local proving on a recent smartphone):
         * Reduces end-to-end latency by up to 26x.
         * Lowers delegator's active computation time by up to 1447x.
         * Enables proving up to 256x larger instances.
-* **Implementation:** A Rust library, Eos, demonstrating concrete efficiency.
+* Implementation: A Rust library, Eos, demonstrating concrete efficiency.
 
 ---
 
 # **Related Work (Brief Highlights)**
 
-* **Trinocchio:** Outsourcing with MPC and zkSNARKs.
+* Trinocchio: Outsourcing with MPC and zkSNARKs.
     * Differences: Targets a zkSNARK with circuit-specific setup, uses Shamir secret sharing (privacy against n/2 corruptions), semi-honest security.
-* **Kanjalkar et al.:** Auditable MPC using Marlin zkSNARKs.
+* Kanjalkar et al.: Auditable MPC using Marlin zkSNARKs.
     * Differences: Also uses Shamir secret sharing (n/2 corruptions). Eos protocols are more general for other PIOPs and PC schemes.
-* **Ozdemir and Boneh (OB22):** "Collaborative proving" for distributed secrets.
+* Ozdemir and Boneh (OB22): "Collaborative proving" for distributed secrets.
     * Similar insights (e.g., additive homomorphisms for polynomial commitments).
-    * **Eos Differences:**
+    * Eos Differences:
         * Leverages honest delegator for MPC preprocessing (vs. heavyweight crypto in OB22).
         * Uses novel "PIOP consistency checkers" for malicious security (vs. info-theoretic MACs in OB22, which adds overhead).
         * Result: Eos is 6-8x faster and requires 3-5x less communication than OB22 in delegation settings.
-* **DIZK:** Distributes prover computation but doesn't hide the witness from workers. Complementary to Eos (workers could use DIZK internally).
+* DIZK: Distributes prover computation but doesn't hide the witness from workers. Complementary to Eos (workers could use DIZK internally).
 
 ---
 section: Preliminaries
 ---
 
-# Core Cryptographic and Computational Primitives in Eos
+# outline
 
-The Eos system for delegating zkSNARK provers builds upon several key cryptographic and computational concepts. Understanding these primitives is essential to grasping how Eos achieves its efficiency and privacy goals.
+PIOP
+
+PCS-KGC
+
+heli tiple
+
+MPC
+
+
 
 ---
 
@@ -671,7 +672,6 @@ The Eos system for delegating zkSNARK provers builds upon several key cryptograp
 
 A **Polynomial Interactive Oracle Proof (PIOP)** is an interactive protocol between a prover and a verifier. It allows the prover to convince the verifier that it knows a valid witness `w` for a given instance `x` and index `i` concerning an indexed relation `R`.
 
-* **Mechanism**: The prover achieves this by sending the verifier **polynomial oracles**. The verifier can then query these oracles at points of its choice and decide whether to accept or reject based on the answers.
 * **Components**: A PIOP is typically specified by a tuple `PIOP = (F, k, s, I, P, V)`.
 
   * `F` is a finite field.
@@ -742,20 +742,29 @@ section: Construction
 
 # Eos System Overview
 
-* **Target zkSNARKs:** Those constructed from Polynomial Interactive Oracle Proofs (PIOPs) and Polynomial Commitment (PC) schemes (e.g., Marlin).
-* **Participants:**
-    * **Delegator (D):** Computationally weak party wishing to prove a statement.
-    * **Workers ($W_1, ..., W_n$):** Powerful (cloud) servers performing the bulk of computation.
-* **Protocol Phases:**
-    * **Preprocessing Phase:** Witness-independent. Material can be pre-computed.
-    * **Online Phase:** Witness-dependent. D sends shares of its private witness `w` and public input `x` to workers.
-* **Communication Modes (Fig. 1):**
-    * **Isolated Mode:** Each honest worker communicates only with D. (Stronger security guarantees, higher communication/latency costs).
-    * **Collaborative Mode:** Workers communicate directly with each other and with D.
-* **Threat Model:**
+
+* Participants:
+    * Delegator (D): Computationally weak party wishing to prove a statement.
+    * Workers ($W_1, ..., W_n$): Powerful (cloud) servers performing the bulk of computation.
+* Protocol Phases:
+    * Preprocessing Phase: Witness-independent. Material can be pre-computed.
+    * Online Phase: Witness-dependent. D sends shares of its private witness `w` and public input `x` to workers.
+* Communication Modes (Fig. 1):
+    * Isolated Mode: Each honest worker communicates only with D. <br>
+    (Stronger security guarantees, higher communication/latency costs).
+    * Collaborative Mode: Workers communicate directly with each other and with D.
+* Threat Model:
     * Privacy: Witness `w` is hidden if at least one worker is honest and non-colluding.
     * Integrity: Dishonest workers can deviate arbitrarily (malicious security).
-* **Witness Reduction:** Delegator performs witness reduction and secret shares the resulting low-level witness.
+* Witness Reduction: Delegator performs witness reduction and secret shares the resulting low-level witness.
+
+<img src="./slides/fig1.png" alt="Logo" width="230" style="position: absolute; top: 110px; left: 85% ; transform: translateX(-50%); z-index: 10;" />
+
+---
+
+# contributions
+
+<img src=".\slides\4contributions.png" alt="Logo" width="800" style="position: absolute; bottom: 100px; left: 50px;" />
 
 ---
 
@@ -797,6 +806,36 @@ section: Construction
 * **Optimized Circuits for PC Schemes (e.g., KZG):**
     * Elliptic Curve Operations: Usually expensive in circuits.
     * Eos Insight: Many operations (like Multi-Scalar Multiplication - MSM) are linear if scalars are private but bases are public (Claim 4.7 for MSM). $C_{KZG}.Commit$ has depth 0 (Claim 4.8). $C_{KZG}.Open$ also has depth 0 (Claim 4.9).
+
+---
+
+# **Specific algorithm-Preprocess**
+
+The delegator create and distribute secret-shared multiplication triples to a set of `n` workers.
+
+These triples allows workers to securely multiply secret-shared values during the online phase without revealing private data.
+
+<img src="./slides/alg1.png" alt="Logo" width="900" style="position: absolute; top: 200px; left: 50% ; transform: translateX(-50%); z-index: 10;" />
+
+<br><br><br><br><br><br><br><br><br>
+
+
+1.Workers calculate `z=x*y`; 
+2.Each worker calculates $d_i=x_i-a_i$ and $e_i=y_i-b_i$ and broadcasts these values.
+
+3.Each worker calculates $d=\sum d_i$ and $e=\sum e_i$; 
+4.workers have $a_i,b_i,c_i$ and they can have their $z_i$
+
+$z=x*y=(d+a)*(e+b)=d*e+d*b+e*a+a*b=d*e+d*\sum b_i+e*\sum a_i+\sum c_i$
+
+For the `C` multiplications in the circuit, the preprocessing phase generates `C` corresponding triple, each triple is split into `n` parts for each worker.
+
+---
+
+# **Specific algorithm-Online**
+
+
+<img src="./slides/alg2.png" alt="Logo" width="900" style="position: absolute; top: 200px; left: 50% ; transform: translateX(-50%); z-index: 10;" />
 
 ---
 section: Evaluation
@@ -909,28 +948,17 @@ section: Evaluation
 
 # **difference between zkSNARK & zkSTARK**
 
-| 特性       | zkSNARK                                                       | zkSTARK                                                   |
-| -------- | ------------------------------------------------------------- | --------------------------------------------------------- |
-| **全称**   | Zero-Knowledge Succinct Non-interactive Argument of Knowledge | Zero-Knowledge Scalable Transparent Argument of Knowledge |
-| **信任设置** | 需要可信预设（Trusted Setup）                                         | 不需要可信预设                                                   |
-| **证明大小** | 几百字节（较小）                                                      | 数十KB（较大）                                                  |
-| **验证速度** | 快                                                             | 非常快（更快）                                                   |
-| **生成速度** | 较慢（尤其对复杂电路）                                                   | 更快，尤其适合大规模证明                                              |
-| **抗量子性** | 不抗量子攻击                                                        | 抗量子攻击                                                     |
-| **加密原语** | 椭圆曲线密码学（如pairing-based cryptography）                          | 基于哈希函数（如Merkle树、FRI）                                      |
-| **适用场景** | 常用于以太坊隐私协议（如Zcash、Aztec）                                      | 常用于可扩展性方案（如StarkNet、zkRollup）                             |
-| **复杂度**  | 电路复杂性较高、工具链成熟                                                 | 工具较新，电路设计更简单                                              |
-
----
-
-| 特性         | zkSNARK               | zkSTARK                     |
-| ---------- | --------------------- | --------------------------- |
-| **可信设置**   | 需要可信设置（Trusted Setup） | ✅ 无需可信设置（透明）                |
-| **数学基础**   | 椭圆曲线、对数硬问题（需复杂密码学工具）  | 基于哈希函数（如 Merkle Tree），更量子安全 |
-| **证明大小**   | 小（几百字节）               | 较大（几十 KB 到几 MB）             |
-| **验证速度**   | 极快                    | 快，但比 zkSNARK 稍慢             |
-| **证明生成速度** | 较慢                    | 更快，支持大规模并行                  |
-| **量子抗性**   | ❌ 不抗量子攻击              | ✅ 抗量子攻击                     |
+| 特性         | zkSNARK                                                       | zkSTARK                                                   |
+| ---------- | ------------------------------------------------------------- | --------------------------------------------------------- |
+| **全称**     | Zero-Knowledge Succinct Non-interactive Argument of Knowledge | Zero-Knowledge Scalable Transparent Argument of Knowledge |
+| **可信设置**   | 需要可信设置（Trusted Setup）                                         | ✅ 无需可信设置（透明）                                                 |
+| **数学基础**   | 椭圆曲线密码学（如pairing-based cryptography）、对数硬问题              | 基于哈希函数（如 Merkle Tree、FRI），更量子安全                            |
+| **证明大小**   | 小（几百字节）                                                      | 较大（数十KB到几MB）                                                |
+| **验证速度**   | 极快                                                            | 快，但比 zkSNARK 稍慢                                             |
+| **证明生成速度** | 较慢（尤其对复杂电路）                                                   | 更快，尤其适合大规模证明，支持大规模并行                                        |
+| **量子抗性**   | ❌ 不抗量子攻击                                                      | ✅ 抗量子攻击                                                     |
+| **适用场景**   | 常用于以太坊隐私协议（如Zcash、Aztec）                                      | 常用于可扩展性方案（如StarkNet、zkRollup）                             |
+| **复杂度**    | 电路复杂性较高、工具链成熟                                                 | 工具较新，电路设计更简单                                              |
 
 
 ---
