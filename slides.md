@@ -5,7 +5,7 @@ transition: slide-left
 author: Tianyi Wang
 title: "EOS"
 mdc: true
-date: '2025/6/31'
+date: '2025/7/30'
 fonts:
   sans: "Times New Roman"
   provider: none
@@ -454,7 +454,7 @@ $
 | `β·G₂` | G2 | 用于构造证明中的 B |
 | `γ·G₂` | G2 | 绑定公共输入 |
 | `δ·G2` | G2 | 保证完整性（用来防止伪造） |
-| 更多：如 `Aᵢ(s)/δ`, `Bᵢ(s)/δ`, `Cᵢ(s)/δ`, `H(s)/δ` 等 | G1, G2 | Prover 用                                |
+| 更多：如 `Aᵢ(s)/δ`, `Bᵢ(s)/δ`,<br> `Cᵢ(s)/δ`, `H(s)/δ` 等 | G1, G2 | Prover 用                                |
 
 
 </div>
@@ -468,6 +468,37 @@ Reference:[1] On the Size of Pairing-based Non-interactive Arguments?
 
 ---
 section: Preliminaries
+---
+
+<div class="text-xl" style="transform: scale(0.9); transform-origin: top left; display: inline-block;">
+
+# 🔍 **Comparison: EOS in zkSNARK Research vs EOS.IO Blockchain Platform**
+
+| | EOS (zkSNARK paper) | EOS.IO (Blockchain Platform) |
+|---|---|---|
+| **Full Name** | Efficient Outsourcing of SNARKs | Enterprise Operation System |
+| **Field** | Cryptography, zkSNARKs, Secure Computation | Blockchain Systems, Distributed Ledger |
+| **Core Goal** | Privacy-preserving delegation of zkSNARK proving | High-performance, fee-free smart contract platform |
+| **Open Source** | [USENIX-2023](https://www.usenix.org/conference/usenixsecurity23/presentation/chiesa) | [GitHub-EOS.IO](https://github.com/EOSIO/eos) |
+| **Main Technologies** | zkSNARKs, PIOP, Polynomial Commitments, Secret Sharing | Blockchain VM, Token Economy, Resource Model |
+
+<br>
+
+> <span style="font-size: 1.5em; color:rgb(0, 0, 0); font-weight: 450;">
+> ⚠️ Note: These two EOS projects are completely unrelated. The zkSNARK EOS is a cryptography research system; the blockchain EOS is an enterprise-grade DApp platform.
+> </span>
+
+</div>
+
+<div
+  class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
+  style="font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;"
+>
+  Reference: [1] https://www.usenix.org/conference/usenixsecurity23/presentation/chiesa<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ensp;
+  [2] https://github.com/EOSIO/eos
+</div>
+
 ---
 
 # **Marlin：basic of EOS**
@@ -592,93 +623,6 @@ Marlin uses the **KZG polynomial commitment scheme**, which is crucial for EOS's
 
 
 ---
-
-<div class="text-xl" style="transform: scale(0.9); transform-origin: top left; display: inline-block;">
-
-# 🔍 **Comparison: EOS in zkSNARK Research vs EOS.IO Blockchain Platform**
-
-| Category | EOS (zkSNARK paper) | EOS.IO (Blockchain Platform) |
-|----------|---------------------|-------------------------------|
-| **Full Name** | Efficient Outsourcing of SNARKs | Enterprise Operation System |
-| **Field** | Cryptography, zkSNARKs, Secure Computation | Blockchain Systems, Distributed Ledger |
-| **Core Goal** | Privacy-preserving delegation of zkSNARK proving | High-performance, fee-free smart contract platform |
-| **Open Source** | [USENIX-2023](https://www.usenix.org/conference/usenixsecurity23/presentation/chiesa) | [GitHub-EOS.IO](https://github.com/EOSIO/eos) |
-| **Main Technologies** | zkSNARKs, PIOP, Polynomial Commitments, Secret Sharing | Blockchain VM, Token Economy, Resource Model |
-
-<br>
-
-> <span style="font-size: 1.5em; color:rgb(0, 0, 0); font-weight: 450;">
-> ⚠️ Note: These two EOS projects are completely unrelated. The zkSNARK EOS is a cryptography research system; the blockchain EOS is an enterprise-grade DApp platform.
-> </span>
-
-</div>
-
-<div
-  class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
-  style="font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;"
->
-  Reference: [1] https://www.usenix.org/conference/usenixsecurity23/presentation/chiesa<br>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ensp;
-  [2] https://github.com/EOSIO/eos
-</div>
-
----
-
-# Polynomial Interactive Oracle Proofs (PIOPs) 🧮
-Polynomial Interactive Oracle Proof (PIOP) is an interactive protocol between a prover and a verifier. It allows the prover to convince the verifier that it knows a valid witness `w` for a given instance `x` and index `i` concerning an indexed relation `R`.
-
-* Components: A PIOP is typically specified by a tuple `PIOP = (F, k, s, I, P, V)`.
-
-  * `F` is a finite field.
-  * `k` is the number of rounds.
-  * `s(j)` denotes the number of prover polynomials in the j-th round.
-  * The Indexer (I) preprocesses the NP index `i` into a set of indexed polynomials during an offline phase. These are available to the prover in full and as oracles to the verifier.
-  * The Prover (P), given `(F, i, x, w)`, interacts with the verifier by sending oracle polynomials in each round.
-  * The Verifier (V), given `x`, sends messages (challenges) to the prover and queries the prover's polynomials and the indexed polynomials.
-* Properties: The PIOPs considered in Eos are required to achieve perfect completeness, negligible knowledge soundness error, and zero knowledge.
-* Role in zkSNARKs: PIOPs are an information-theoretic component used to construct zkSNARKs.
-
----
-
-# Polynomial Commitment Schemes (PC Schemes) 🔒
-
-A **Polynomial Commitment (PC) scheme** is a cryptographic primitive that enables a committer to commit to a polynomial and later prove to another party that the committed polynomial evaluates to a claimed value at a specific challenge point.
-
-* **Functionality**: It allows a sender to cryptographically bind themselves to a polynomial `p`. Subsequently, they can provide a proof for any evaluation `p(z) = y`.
-* **Algorithms**: A PC scheme typically consists of a tuple of algorithms `PC = (Setup, Trim, Commit, Open, Check)`.
-
-  * `PC.Commit(ck, p; r̄) → C`: Takes a commitment key `ck` and a polynomial `p` (with optional randomness `r̄` if hiding) and outputs a commitment `C`.
-  * `PC.Open(ck, C, p, z; r̄) → π`: Takes `ck`, commitment `C`, polynomial `p`, an evaluation point `z`, and randomness `r̄`, then outputs an evaluation proof `π`.
-* **Properties**: PC schemes must satisfy completeness, extractability, and (often) hiding.
-* **Role in zkSNARKs**: PC schemes are used to compile PIOPs into concretely efficient zkSNARKs. The PIOP prover uses the PC scheme to commit to the polynomial oracles it would normally send. Instead of sending the oracle, it sends the commitment. When the PIOP verifier wants to query an oracle at a point, the prover provides the evaluation along with a PC scheme evaluation proof.
-
----
-
-# Multi-Party Computation (MPC) and Eos's Approach 🤝
-
-**Multi-Party Computation (MPC)** allows multiple parties to jointly compute a function over their private inputs without revealing those inputs to each other.
-
-* **Strawman for Delegation**: A straightforward approach to delegating zkSNARK proving would be for the delegator to secret share its witness `w` with the workers, who then use an MPC protocol to securely evaluate the zkSNARK prover algorithm.
-* **Shortcomings of Off-the-Shelf MPC**:
-
-  * **Efficiency**: State-of-the-art MPC protocols that achieve malicious security against a dishonest majority often rely on relatively heavyweight public-key cryptography, which has significant computational overhead.
-  * **Circuit Complexity**: These MPC protocols typically require expressing the computation as an arithmetic circuit. Directly translating complex zkSNARK prover algorithms (which include operations like elliptic curve multi-scalar multiplications and polynomial arithmetic) into circuits can be prohibitively expensive.
-* **Eos's Specialized MPC Design**: Eos overcomes these issues with a specialized approach tailored for delegation.
-
-  * **Leveraging the Honest Delegator**: Since the delegator is an honest participant (it's their computation), Eos uses this trust to simplify the MPC.
-
-    * In collaborative mode, the delegator can help generate correlated randomness (like multiplication triples) needed for the MPC, eliminating the need for workers to use expensive public-key crypto for this.
-    * In isolated mode, the delegator can directly assist in implementing multiplication functionalities.
-  * **Additive Secret Sharing**: Eos utilizes additive secret sharing, which allows a secret `m` to be split into `n` shares such that `n-1` shares reveal no information about `m`. This scheme is homomorphic with respect to addition.
-* **Oracle Elliptic-Curve Circuit Model**: To handle the rich functionalities in zkSNARK proving, Eos uses an extended circuit model.
-
-  * This model supports wires carrying values from a finite field `F` or an elliptic curve group `G`.
-  * Gates include standard arithmetic in `F` (`Add_F`, `Mul_F`), group addition in `G` (`Add_G`), scalar multiplication in `G` (`Mul_G` where one input is public), random oracle calls (`RO` on public inputs), and revealing values (`Reveal`).
-  * This richer circuit model allows for more efficient representation of zkSNARK prover operations within the MPC framework.
-
-By combining these primitives in a novel way, particularly by specializing the MPC protocol for the delegation setting and designing efficient circuits, Eos achieves its significant performance and privacy benefits.
-
----
 section: Construction
 ---
 
@@ -750,13 +694,13 @@ section: Conclusion
 | 贡献 | 单次Trusted Setup | 委托者将证明不泄露隐私下外包 | 在EOS基础上实现委托者完全离线 |
 | 委托者操作 | 本地证明，独立完成所有计算 | 证明生成期间需保持在线并参与检查 | 仅离线准备并分发一次数据，之后无需参与任何计算或通信 |
 | 安全<br>模型 | 不涉及委托，为本地计算 | 至少1个工作者诚实（加法聚合） | 超过一半工作者诚实（Shamir秘密共享聚合，门限k，工人数n=2k+1） |
-| 委托者开销 | 高（独立承担所有计算和内存开销） | 中等（远低于Marlin，但受网络带宽和在线交互限制） | 极低（显著低于EOS，高带宽下节省约80%时间，仅需一次性离线准备分发） |
+| 委托者开销 | 高（独立承担所有计算和内存开销） | 中等（远低于Marlin，但受<br>网络带宽和在线交互限制） | 极低（显著低于EOS，高带宽下节省约80%时间，仅需一次性离线准备分发） |
 | 工作者开销 | 无 | 高带宽下较低（通信延迟可忽略）；低带宽下很高（需等待委托者响应） | 高带宽下较高（需额外执行一致性检查）；低带宽下较低（无需等待委托者） |
 | 通信<br>开销 | 无 | 较低 | 较高（Beaver三元组、认证标签和密钥等） |
 
 ---
 
-# Problem
+# **Problem**
 
 <img src="./slides/problem.png" alt="Logo" width="850" style="position: absolute; top: 110px; left: 50% ; transform: translateX(-50%); z-index: 10;" />
 
