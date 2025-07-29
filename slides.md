@@ -173,8 +173,20 @@ layout: default
 
   </div>
 </div>
-
 <br>
+
+---
+
+# **性能瓶颈天然适配MPC（电路深度小）**
+
+|特性|FFT(快速傅里叶变换)|MSM(多标量乘法)|
+|---|---|---|
+|要解决的问题|两个n次多项式的乘法|n组标量和椭圆曲线点的乘积之和|
+|朴素解法的复杂度|$O(n^2)$(逐项相乘)|$O(n*k)$(逐项计算标量乘法，k为标量位宽)|
+|优化思想|分治法：将问题转换到点值域，<br>O(n)完成乘法，再转换回来|批处理/分桶法：将所有标量重组，<br>一次性计算总和，复用大量中间计算|
+|优化后的复杂度|$O(nlogn)$|$O(\frac{n*k}{\log n})$(Pippenger算法)|
+|在zkSNARK<br>的中角色|PIOP证明者中的一个核心<br>性能瓶颈，用于多项式运算|是多项式承诺方案(PC)中的<br>一个核心性能瓶颈，用于群运算|
+|电路深度|0|0|
 
 
 ---
@@ -196,9 +208,7 @@ section: zkSNARK基础知识
 
 # **zkSNARK的关键组件**
 
-温馨提示：本章开始，难度飙升
-
-大致流程：
+算法流程：
 
  * 将多项式先抽象成算数门（加减乘除）
 
@@ -211,7 +221,11 @@ section: zkSNARK基础知识
  * 生成并输出证明
  ---
 
-本章旨在介绍zkSNARK是如何工作的，以及<br>Groth16算法的基础差异，而非直接讲解EOS<br>但对理解EOS和Siniel是如何工作的至关重要
+本章内容介绍的是Groth16算法的流程<br>
+而非Marlin和EOS等算法<br>
+差异在于将QAP替换为AHP<br>
+但都需要经过R1CS转化<br>
+（后面会介绍详细内容）
 
 <img src="./slides/clueZK.png" alt="Logo" width="120" style="position: absolute; top: 130px; left: 370px; z-index: 10;" />
 
@@ -453,10 +467,10 @@ Reference:[1] On the Size of Pairing-based Non-interactive Arguments?
 </div>
 
 ---
-section: Marlin：basic of EOS
+section: Preliminaries
 ---
 
-# **What is Marlin**
+# **Marlin：basic of EOS**
 
 **Marlin**: a general zkSNARK protocol based on Polynomial Interactive Proofs (PIOPs) and Polynomial Commitment Schemes (PCS).
 <div class="grid grid-cols-3 gap-4">
@@ -530,50 +544,53 @@ section: Marlin：basic of EOS
 
 ---
 
-# **Marlin中的多项式承诺**
+# **Polynomial Commitments in Marlin**
 
-Marlin 使用 **KZG 多项式承诺方案**，这对EOS的设计至关重要：
+Marlin uses the **KZG polynomial commitment scheme**, which is crucial for EOS's design:
 
 <div class="grid grid-cols-2 gap-4">
   <div class="bg-orange-100 p-4">
 
-  ## **KZG 承诺的特性**
+  ## **Properties of KZG Commitments**
 
-  * **同态性**：$\text{Commit}(f + g) = \text{Commit}(f) + \text{Commit}(g)$
-  * **批量验证**：可以同时验证多个多项式评估
-  * **简洁性**：承诺大小为常数（一个椭圆曲线点）
+  * Homomorphism: <br> $\text{Commit}(f + g) = \text{Commit}(f) + \text{Commit}(g)$
+  * Succinctness: <br> Commitment size is constant (one elliptic curve point)
 
-  **承诺过程**：
-  ```
-  Setup: g^{τ^0}, g^{τ^1}, ..., g^{τ^d}
-  Commit(f): C = g^{f(τ)}
-  Prove(f, z): π = g^{(f(τ)-f(z))/(τ-z)}
-  Verify: e(C/g^{f(z)}, g) = e(π, g^{τ}/g^z)
-  ```
+  **Commitment Process**:
+  
+  $$
+  \begin{aligned}
+  &Setup: g^{τ^0}, g^{τ^1}, ..., g^{τ^d}\\
+  &Commit(f): C = g^{f(τ)}\\
+  &Prove(f, z): π = g^{(f(τ)-f(z))/(τ-z)}\\
+  &Verify: e(C/g^{f(z)}, g) = e(π, g^{τ}/g^z)
+  \end{aligned}
+  $$
 
   </div>
   <div class="bg-purple-100 p-4">
 
-  ## **在EOS中的优势**
+  ## **Advantages in EOS**
 
-  * **可加性**：秘密共享后的多项式可以直接相加
-  * **线性性**：多标量乘法可以分布式计算
-  * **高效验证**：验证者只需检查双线性对等式
+  * Additivity: Secret-shared polynomials can be directly added
+  * Linearity: <br> Multi-scalar multiplication can be computed distributively
+  * Efficient Verification: <br> Verifier only needs to check bilinear pairing equations
 
-  **分布式承诺**：
-  ```
-  f(X) = f₁(X) + f₂(X) + ... + fₙ(X)
-  C = g^{f₁(τ)} · g^{f₂(τ)} · ... · g^{fₙ(τ)}
-  ```
+  Distributed Commitment:
+  
+  $$
+  \begin{aligned}
+  &f(X) = f₁(X) + f₂(X) + ... + fₙ(X)\\
+  &C = g^{f₁(τ)} · g^{f₂(τ)} · ... · g^{fₙ(τ)}
+  \end{aligned}
+  $$
 
-  每个工人可以独立计算自己的部分承诺
+  Each worker can independently compute their partial commitment
 
   </div>
 </div>
 
 
----
-section: introduction
 ---
 
 <div class="text-xl" style="transform: scale(0.9); transform-origin: top left; display: inline-block;">
@@ -607,94 +624,19 @@ section: introduction
 
 ---
 
-# **Motivation**
-
-The Problem:
-
-  * Generating zkSNARKs is **computationally expensive** (time and memory).
-  * This limits their use in **resource-constrained environments** (e.g., mobile devices) and for complex computations.
-
-Existing Approaches & Limitations:
-
-  * Local Proving: Too **slow** and **resource-intensive for** many users/applications.
-  * Cloud Delegation: Powerful servers can generate proofs faster, BUT this sacrifices privacy by **revealing the secret witness** $w$ to the cloud. Problematic for privacy-focused applications like private currencies or decentralized computation.
-
-The Central Question: Can users **privately** and **efficiently** outsource zkSNARK proving to untrusted machines?
-
----
-
-# **Eos: Contributions Overview**
-
-* Key Features & Guarantees:
-    * Privacy: No private information (witness `w`) revealed if at least one worker is honest and doesn't collude with others.
-    * Security: Secure against malicious workers without relying on heavyweight cryptographic tools.
-    * Efficiency (compared to local proving on a recent smartphone):
-        * Reduces end-to-end latency by up to 26x.
-        * Lowers delegator's active computation time by up to 1447x.
-        * Enables proving up to 256x larger instances.
-* Implementation: A Rust library, Eos, demonstrating concrete efficiency.
-
----
-
-# **Related Work (Brief Highlights)**
-
-* Trinocchio: Outsourcing with MPC and zkSNARKs.
-    * Differences: Targets a zkSNARK with circuit-specific setup, uses Shamir secret sharing (privacy against n/2 corruptions), semi-honest security.
-* Kanjalkar et al.: Auditable MPC using Marlin zkSNARKs.
-    * Differences: Also uses Shamir secret sharing (n/2 corruptions). Eos protocols are more general for other PIOPs and PC schemes.
-* Ozdemir and Boneh (OB22): "Collaborative proving" for distributed secrets.
-    * Similar insights (e.g., additive homomorphisms for polynomial commitments).
-    * Eos Differences:
-        * Leverages honest delegator for MPC preprocessing (vs. heavyweight crypto in OB22).
-        * Uses novel "PIOP consistency checkers" for malicious security (vs. info-theoretic MACs in OB22, which adds overhead).
-        * Result: Eos is 6-8x faster and requires 3-5x less communication than OB22 in delegation settings.
-* DIZK: Distributes prover computation but doesn't hide the witness from workers. Complementary to Eos (workers could use DIZK internally).
-
----
-section: Preliminaries
----
-
-# outline
-
-PIOP
-
-PCS-KGC
-
-heli tiple
-
-MPC
-
-
-
----
-
 # Polynomial Interactive Oracle Proofs (PIOPs) 🧮
+Polynomial Interactive Oracle Proof (PIOP) is an interactive protocol between a prover and a verifier. It allows the prover to convince the verifier that it knows a valid witness `w` for a given instance `x` and index `i` concerning an indexed relation `R`.
 
-A **Polynomial Interactive Oracle Proof (PIOP)** is an interactive protocol between a prover and a verifier. It allows the prover to convince the verifier that it knows a valid witness `w` for a given instance `x` and index `i` concerning an indexed relation `R`.
-
-* **Components**: A PIOP is typically specified by a tuple `PIOP = (F, k, s, I, P, V)`.
+* Components: A PIOP is typically specified by a tuple `PIOP = (F, k, s, I, P, V)`.
 
   * `F` is a finite field.
   * `k` is the number of rounds.
   * `s(j)` denotes the number of prover polynomials in the j-th round.
-  * The **Indexer (I)** preprocesses the NP index `i` into a set of indexed polynomials during an offline phase. These are available to the prover in full and as oracles to the verifier.
-  * The **Prover (P)**, given `(F, i, x, w)`, interacts with the verifier by sending oracle polynomials in each round.
-  * The **Verifier (V)**, given `x`, sends messages (challenges) to the prover and queries the prover's polynomials and the indexed polynomials.
-* **Properties**: The PIOPs considered in Eos are required to achieve perfect completeness, negligible knowledge soundness error, and zero knowledge.
-* **Role in zkSNARKs**: PIOPs are an information-theoretic component used to construct zkSNARKs.
-
----
-
-# PIOP2
-
-<img src="./slides/PIOP.png" alt="Logo" width="800" style="position: absolute; top: 120px; left: 50% ; transform: translateX(-50%); z-index: 10;" />
-
-<div
-  class="absolute bottom-9 left-3 text-sm text-gray-700 leading-snug font-medium"
-  style="font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;"
->
-Reference:[1] The PLONK Polynomial Interactive Oracle Proof (PIOP) — Stanford Course Notes(https://cs355.stanford.edu/lectures/Lecture12-plonk.pdf)
-</div>
+  * The Indexer (I) preprocesses the NP index `i` into a set of indexed polynomials during an offline phase. These are available to the prover in full and as oracles to the verifier.
+  * The Prover (P), given `(F, i, x, w)`, interacts with the verifier by sending oracle polynomials in each round.
+  * The Verifier (V), given `x`, sends messages (challenges) to the prover and queries the prover's polynomials and the indexed polynomials.
+* Properties: The PIOPs considered in Eos are required to achieve perfect completeness, negligible knowledge soundness error, and zero knowledge.
+* Role in zkSNARKs: PIOPs are an information-theoretic component used to construct zkSNARKs.
 
 ---
 
@@ -740,8 +682,7 @@ By combining these primitives in a novel way, particularly by specializing the M
 section: Construction
 ---
 
-# Eos System Overview
-
+# **Eos System Overview**
 
 * Participants:
     * Delegator (D): Computationally weak party wishing to prove a statement.
@@ -760,52 +701,12 @@ section: Construction
 
 <img src="./slides/fig1.png" alt="Logo" width="230" style="position: absolute; top: 110px; left: 85% ; transform: translateX(-50%); z-index: 10;" />
 
----
-
-# contributions
-
-<img src=".\slides\4contributions.png" alt="Logo" width="800" style="position: absolute; bottom: 100px; left: 50px;" />
 
 ---
 
-# Core Idea 1: Specialized MPC for Delegation
+# **Specific algorithm-ExecCircuit**
 
-* **Strawman (Off-the-shelf MPC):** Secret share `w`, then use general MPC (e.g., SPDZ) for prover computation.
-    * Inefficient: Heavyweight public-key crypto for correlated randomness for multiplication gates, overhead of authenticated shares for malicious security. Complex prover algorithms are expensive as MPC circuits.
-* **Eos Approach: Leverage the Honest Delegator (D)**
-    * The delegator is trusted to be honest (it's their own witness).
-    * **Collaborative Mode:** D can generate correlated randomness (e.g., multiplication triples) for workers.
-    * **Isolated Mode:** D can directly implement the multiplication functionality.
-    * This eliminates the need for workers to perform expensive public-key operations for these MPC components.
-
----
-
-# Core Idea 2: Enforcing Malicious Security Efficiently
-
-* **Challenge:** How to ensure malicious workers don't cheat or learn `w` without costly authenticated shares?
-* **Insight:** The computation *is* generating a zkSNARK, which is "error-detecting".
-* **Problem with Naive Check:** Delegator simply verifying the final proof isn't enough. Adversary might malleate shares of `w` to produce an invalid proof for a *related* statement, potentially leaking information about `w` by observing if the verification passes/fails.
-* **Eos Solution: PIOP Consistency Checkers (Section 5)**
-    * Delegator efficiently checks that intermediate polynomials computed (via MPC) by workers are "consistent" with those an honest prover would have computed using *D's actual witness*.
-    * This is done by D querying specific evaluations of the secret-shared polynomials and checking them against locally computed values (formalized in Section 5.1, example for MARLIN PIOP in Section 5.2 and Appendix B).
-    * Avoids the overhead of general MPC malicious security techniques like authenticated triples.
-
----
-
-# Core Idea 3: Efficient Circuits for zkSNARK Provers (Section 4)
-
-* **Goal:** Minimize overhead when translating zkSNARK prover algorithms into MPC-friendly circuits.
-* **Leveraging Algebraic Structure:** PIOPs and PC schemes involve many polynomial operations.
-* **Optimized Circuits for Polynomial Arithmetic (on secret-shared polynomials):**
-    * **Linear Operations (Depth 0 for MPC):**
-        * Addition, Subtraction (`PolyAdd` - Claim 4.1).
-        * FFT / IFFT (Multi-point evaluation/interpolation over smooth subgroups - Claims 4.2, 4.3).
-        * Division by a *public* polynomial (`PolyDiv` - Claim 4.6).
-    * **Polynomial Multiplication (`PolyMul`) (Depth 1 for MPC - Claim 4.5):**
-        * Use FFT: Evaluate $p_1, p_2$ on a domain, pointwise multiply evaluations, IFFT back. Only pointwise products are actual multiplications in MPC.
-* **Optimized Circuits for PC Schemes (e.g., KZG):**
-    * Elliptic Curve Operations: Usually expensive in circuits.
-    * Eos Insight: Many operations (like Multi-Scalar Multiplication - MSM) are linear if scalars are private but bases are public (Claim 4.7 for MSM). $C_{KZG}.Commit$ has depth 0 (Claim 4.8). $C_{KZG}.Open$ also has depth 0 (Claim 4.9).
+<img src="./slides/alg0.png" alt="Logo" width="900" style="position: absolute; top: 120px; left: 50% ; transform: translateX(-50%); z-index: 10;" />
 
 ---
 
@@ -834,132 +735,46 @@ For the `C` multiplications in the circuit, the preprocessing phase generates `C
 
 # **Specific algorithm-Online**
 
+<img src="./slides/alg3.png" alt="Logo" width="1000" style="position: absolute; top: 335px; left: 50% ; transform: translateX(-50%); z-index: 10;" />
 
-<img src="./slides/alg2.png" alt="Logo" width="900" style="position: absolute; top: 200px; left: 50% ; transform: translateX(-50%); z-index: 10;" />
-
----
-section: Evaluation
----
-
-# Implementation & Key Optimizations (Section 7)
-
-* **Eos Library:**
-    * Implemented in Rust.
-    * Builds upon the `arkworks` ecosystem.
-    * Generic design: Supports various PIOP-based zkSNARKs by using abstractions for secret-shared field elements/polynomials.
-* **Performance Optimizations:**
-    * **Improved Parallelization:** For FFTs & MSMs (bottlenecks), Eos runs multiple independent operations in parallel, each with an optimal number of threads. (Reduces polynomial commit time by up to 3x and PIOP prover time by up to 4x).
-    * **Reduced Delegator Communication (Secret Sharing):** For a vector, send full share to one worker, PRG seeds to others.
-    * **Lower Delegator Memory (Triple Generation):** Delegator processes elements in batches (streaming) for constant additional memory use.
-    * **Faster Secret Multiplications (Polynomial Products):** Algebraic rewriting of $z_A \cdot z_B = (z_A' + r_A v_H)(z_B' + r_B v_H)$ to reduce FFT sizes needed from 4|H| to 2|H|.
-    * **Efficient Scalar-Vector Products:** Specialized MPC triples when one factor is a repeated scalar (reduces per-worker communication from 8|H| to 6|H| field elements with two workers).
+<img src="./slides/alg2.png" alt="Logo" width="1000" style="position: absolute; top: 115px; left: 50% ; transform: translateX(-50%); z-index: 10;" />
 
 ---
+section: Conclusion
+---
 
-# Evaluation Setup (Section 8.1)
+# **Comparison between 3 papers**
 
-* **Research Questions:**
-    * Q1: Can Eos prove R1CS instances larger than local proving?
-    * Q2: What is the overhead (time, communication) of Eos for locally-provable instances?
-* **Delegator Setups:**
-    * **LAPTOPHB:** Mid-grade laptop, strong network (AWS r4.xlarge, 32GB RAM, 4 cores, 3Gbps network).
-    * **LAPTOPLB:** Mid-grade laptop, average network (same HW, but 350Mbps down / 13Mbps up network).
-    * **MOBILE:** Smartphone, average Wi-Fi (Google Pixel 4a, 6GB RAM, 350Mbps down / 13Mbps up Wi-Fi).
-* **Workers:** Two powerful AWS c5.24xlarge instances (192GB RAM, 96-core CPU) in different regions (simulating trust domains).
-* **Baselines for Comparison:**
-    * **DEL:** Delegator generates zkSNARK locally (private but slow).
-    * **WORKER:** A single worker generates zkSNARK locally (fast but not private).
+|  | **Marlin(EUROCRYPT 2020)** | **EOS(USENIX 2023)** | **Siniel(NDSS 2025)** |
+| --- | --- | --- | --- |
+| 贡献 | 单次Trusted Setup | 委托者将证明不泄露隐私下外包 | 在EOS基础上实现委托者完全离线 |
+| 委托者操作 | 本地证明，独立完成所有计算 | 证明生成期间需保持在线并参与检查 | 仅离线准备并分发一次数据，之后无需参与任何计算或通信 |
+| 安全<br>模型 | 不涉及委托，为本地计算 | 至少1个工作者诚实（加法聚合） | 超过一半工作者诚实（Shamir秘密共享聚合，门限k，工人数n=2k+1） |
+| 委托者开销 | 高（独立承担所有计算和内存开销） | 中等（远低于Marlin，但受网络带宽和在线交互限制） | 极低（显著低于EOS，高带宽下节省约80%时间，仅需一次性离线准备分发） |
+| 工作者开销 | 无 | 高带宽下较低（通信延迟可忽略）；低带宽下很高（需等待委托者响应） | 高带宽下较高（需额外执行一致性检查）；低带宽下较低（无需等待委托者） |
+| 通信<br>开销 | 无 | 较低 | 较高（Beaver三元组、认证标签和密钥等） |
 
 ---
 
-# Evaluation Results: Proving Larger Instances (Q1 - Section 8.2, Table 1)
+# Problem
 
-* **Key Finding:** Eos consistently enables proving larger instances within the same delegator time/memory budgets.
-* **Memory Budget (e.g., 3GB for Delegator):**
-    * All setups (LAPTOPHB, LAPTOPLB, MOBILE): Eos proves up to **256x larger** instances (e.g., local $2^{17}$ vs Eos $2^{25}$).
-* **Time Budget (e.g., 100s for Delegator):**
-    * MOBILE (Collaborative): **32x larger** instances ($2^{16}$ vs $2^{21}$).
-    * LAPTOPHB (Collaborative/Isolated): **8x larger** instances ($2^{18}$ vs $2^{21}$).
-* **Collaborative vs. Isolated:** Collaborative often supports larger sizes than isolated if delegator communication is the bottleneck (LAPTOPLB, MOBILE).
+<img src="./slides/problem.png" alt="Logo" width="850" style="position: absolute; top: 110px; left: 50% ; transform: translateX(-50%); z-index: 10;" />
 
----
+<!-- ---
 
-# Evaluation Results: End-to-End Latency (Q2 - Section 8.3.1, Fig. 5)
+# **Difference between zkSNARK & zkSTARK**
 
-* **LAPTOPHB (High Bandwidth):**
-    * Isolated: 5.5x–8.5x faster than DEL.
-    * Collaborative: 5.5x–9x faster than DEL.
-    * Overhead vs. WORKER (non-private baseline): Only 1.1x–1.9x, demonstrating low computational overhead with sufficient bandwidth.
-* **LAPTOPLB (Low Upload Bandwidth):**
-    * Isolated: 1.7x faster than DEL.
-    * Collaborative: 5.7x faster than DEL (delegator online cost lower as some communication moves to preprocessing).
-* **MOBILE (Low Bandwidth & CPU):**
-    * Isolated: 7.6x–8.5x faster than DEL.
-    * Collaborative: **22x–26x faster** than DEL.
-* **Summary:** Eos provides speedups in all setups. Collaborative generally better if preprocessing is feasible.
-
----
-
-# Evaluation Results: Delegator Online Time & Communication (Q2)
-
-* **Delegator Online Time (Active Participation Time - Fig. 6):**
-    * Significantly lower in Eos than DEL baseline.
-    * LAPTOPHB (Collaborative): Reduces delegator online time by at least 592x.
-    * MOBILE (Collaborative): Reduces delegator online time by at least 96x.
-    * (Abstract/Intro also states up to 1447x reduction in delegator's active computation time for a smartphone).
-    * Collaborative mode generally has much lower delegator online time than isolated.
-* **Cost of Preprocessing (Collaborative Mode - Fig. 7):**
-    * Dominated by communication if delegator bandwidth is low for large instances.
-    * Can be done opportunistically (e.g., when on a better network).
-* **Communication Overhead (Delegator-Worker - Fig. 8):**
-    * Grows linearly with instance size.
-    * Isolated mode incurs higher online communication cost than collaborative (even when accounting for preprocessing).
-
----
-
-# Evaluation Results: Comparison with OB22 (Section 8.4, Fig. 9)
-
-* Comparison done on LAPTOPHB setup (most favorable for OB22 due to bandwidth).
-* **Eos Performance vs. OB22:**
-    * Latency: Eos is **6–8x faster**.
-    * Communication:
-        * Delegator-Worker: Eos requires ~3x less.
-        * Worker-Worker: Eos requires ~5x less.
-* **Reason for Improvement:** Eos's delegation-specific design choices (leveraging honest delegator, PIOP consistency checkers) are more efficient in this setting than general collaborative proving tools.
-
----
-
-# Conclusion & Future Work
-
-* **Eos successfully addresses the challenge of private and efficient delegation of zkSNARK provers**.
-* **Key Achievements:**
-    * Significant performance improvements (latency, delegator cost, scalable instance size) across varied settings.
-    * Strong privacy (if $\ge 1$ worker honest) and malicious security guarantees without heavyweight crypto tools.
-* **Novel Techniques Introduced:**
-    * Specialized MPC leveraging the honest delegator.
-    * PIOP consistency checkers for efficient malicious security.
-    * Optimized arithmetic circuits for zkSNARK prover components.
-* **Impact:** Makes advanced cryptographic privacy practical for a wider range of applications and devices.
-* **(Optional: Future Work ideas, if any mentioned or obvious extensions)**
-    * Investigating adaptation of honest-majority protocols for privacy-preserving delegation.
-    * Further exploring streaming witness generation for unbounded instance sizes (Remark 8.1).
-
----
-
-# **difference between zkSNARK & zkSTARK**
-
-| 特性         | zkSNARK                                                       | zkSTARK                                                   |
-| ---------- | ------------------------------------------------------------- | --------------------------------------------------------- |
-| **全称**     | Zero-Knowledge Succinct Non-interactive Argument of Knowledge | Zero-Knowledge Scalable Transparent Argument of Knowledge |
-| **可信设置**   | 需要可信设置（Trusted Setup）                                         | ✅ 无需可信设置（透明）                                                 |
-| **数学基础**   | 椭圆曲线密码学（如pairing-based cryptography）、对数硬问题              | 基于哈希函数（如 Merkle Tree、FRI），更量子安全                            |
-| **证明大小**   | 小（几百字节）                                                      | 较大（数十KB到几MB）                                                |
-| **验证速度**   | 极快                                                            | 快，但比 zkSNARK 稍慢                                             |
-| **证明生成速度** | 较慢（尤其对复杂电路）                                                   | 更快，尤其适合大规模证明，支持大规模并行                                        |
-| **量子抗性**   | ❌ 不抗量子攻击                                                      | ✅ 抗量子攻击                                                     |
-| **适用场景**   | 常用于以太坊隐私协议（如Zcash、Aztec）                                      | 常用于可扩展性方案（如StarkNet、zkRollup）                             |
-| **复杂度**    | 电路复杂性较高、工具链成熟                                                 | 工具较新，电路设计更简单                                              |
-
+| |zkSNARK|zkSTARK|
+|---|---|---|
+|全称|Zero-Knowledge Succinct Non-interactive Argument of Knowledge|Zero-Knowledge Scalable Transparent Argument of Knowledge|
+|可信设置|需要可信设置（TrustedSetup）|✅无需可信设置（透明）|
+|数学基础|椭圆曲线密码学（如pairing-basedcryptography）|基于哈希函数（如MerkleTree、FRI），更量子安全|
+|证明大小|小（几百字节）|较大（数十KB到几MB）|
+|验证速度|极快|快，但比zkSNARK稍慢|
+|证明生成速度|较慢（尤其对复杂电路）|更快，尤其适合大规模证明，支持大规模并行|
+|量子抗性|❌不抗量子攻击|✅抗量子攻击|
+|适用场景|常用于以太坊隐私协议（如Zcash、Aztec）|常用于可扩展性方案（如StarkNet、zkRollup）|
+|复杂度|电路复杂性较高、工具链成熟|工具较新，电路设计更简单| -->
 
 ---
 layout: center
